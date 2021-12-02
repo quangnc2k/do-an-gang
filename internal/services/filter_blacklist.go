@@ -39,10 +39,10 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 	}
 
 	threat = model.Threat{
-		SourceHost:      connLog.ID.OriginalHost,
-		DestinationHost: connLog.ID.ResponseHost,
-		ConnID:          connLog.UID,
-		Phase:           model.CnC,
+		AffectedHost: connLog.ID.OriginalHost,
+		AttackerHost: connLog.ID.ResponseHost,
+		ConnID:       connLog.UID,
+		Phase:        model.CnC,
 	}
 
 	if credit > 0 {

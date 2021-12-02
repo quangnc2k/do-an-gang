@@ -2,6 +2,7 @@ package persistance
 
 import (
 	"context"
+	"errors"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
@@ -12,6 +13,13 @@ import (
 
 type UserRepositorySQL struct {
 	connection *pgxpool.Pool
+}
+
+func NewUserSQLRepo(ctx context.Context, conn *pgxpool.Pool) (UserRepository, error) {
+	if conn == nil {
+		return nil, errors.New("invalid sql connection")
+	}
+	return &UserRepositorySQL{connection: conn}, nil
 }
 
 func (ds *UserRepositorySQL) FindOneByEmail(ctx context.Context, email string) (*model.User, error) {

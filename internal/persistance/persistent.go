@@ -13,6 +13,8 @@ var repoContainer RepositoryContainer
 
 type RepositoryContainer struct {
 	ThreatRepository ThreatRepository
+	UserRepository   UserRepository
+	AlertRepository  AlertRepository
 }
 
 func GetRepoContainer() RepositoryContainer {
@@ -42,6 +44,20 @@ func LoadRepoContainerWithPgx(ctx context.Context) {
 		log.Fatalln("Cannot init threat repositories", err)
 	}
 
+	userRepo, err := NewUserSQLRepo(ctx, conn)
+	if err != nil {
+		log.Fatalln("Cannot init user repositories", err)
+	}
+
+	alertRepo, err := NewAlertSQLRepo(ctx, conn)
+	if err != nil {
+		log.Fatalln("Cannot init alert repositories", err)
+	}
+
 	//Load database global var with this
-	repoContainer = RepositoryContainer{threatRepo}
+	repoContainer = RepositoryContainer{
+		ThreatRepository: threatRepo,
+		UserRepository:   userRepo,
+		AlertRepository:  alertRepo,
+	}
 }

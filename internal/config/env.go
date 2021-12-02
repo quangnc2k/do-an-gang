@@ -24,6 +24,8 @@ type Environment struct {
 	XForcePassword string `envconfig:"xforce_password"`
 
 	MigrateFilePath string `envconfig:"migrate_file_path"`
+
+	JWTSecret string `envconfig:"jwt_secret"`
 }
 
 func Init() {

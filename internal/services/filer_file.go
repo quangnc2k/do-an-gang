@@ -32,9 +32,9 @@ func ProcessFile(ctx context.Context, data string) (marked bool, threat model.Th
 	dest := fileLog.RXHosts[0]
 
 	threat = model.Threat{
-		SourceHost:      src,
-		DestinationHost: dest,
-		Phase:           model.LM,
+		AffectedHost: src,
+		AttackerHost: dest,
+		Phase:        model.LM,
 	}
 
 	m := something.CombineAsMetadata(fileLog.Metadata, xtra)

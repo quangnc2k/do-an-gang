@@ -3,6 +3,7 @@ package persistance
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
@@ -11,6 +12,13 @@ import (
 
 type AlertRepositorySQL struct {
 	connection *pgxpool.Pool
+}
+
+func NewAlertSQLRepo(ctx context.Context, conn *pgxpool.Pool) (AlertRepository, error) {
+	if conn == nil {
+		return nil, errors.New("invalid sql connection")
+	}
+	return &AlertRepositorySQL{connection: conn}, nil
 }
 
 func (r *AlertRepositorySQL) FindAll(ctx context.Context, showAll bool) (alerts []model.Alert, err error) {

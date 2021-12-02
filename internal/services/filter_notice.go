@@ -43,12 +43,12 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 
 	m := something.CombineAsMetadata(noticeLog.Metadata, xtra, noticeLog.ExtraResource)
 	threat = model.Threat{
-		SourceHost:      src,
-		DestinationHost: dest,
-		ConnID:          something.ExtractFromJsonMap(m, "uid").(string),
-		Confidence:      something.ExtractFromJsonMap(m, "confidence").(float64),
-		Severity:        something.ExtractFromJsonMap(m, "severity").(int),
-		Phase:           something.ExtractFromJsonMap(m, "phase").(string),
+		AffectedHost: dest,
+		AttackerHost: src,
+		ConnID:       something.ExtractFromJsonMap(m, "uid").(string),
+		Confidence:   something.ExtractFromJsonMap(m, "confidence").(float64),
+		Severity:     something.ExtractFromJsonMap(m, "severity").(int),
+		Phase:        something.ExtractFromJsonMap(m, "phase").(string),
 	}
 
 	if credit > 0 {
