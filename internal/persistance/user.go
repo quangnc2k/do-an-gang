@@ -6,6 +6,7 @@ import (
 )
 
 type UserRepository interface {
+	List(ctx context.Context) ([]model.User, error)
 	FindOneByEmail(ctx context.Context, email string) (*model.User, error)
 	FindOneByID(ctx context.Context, id string) (*model.User, error)
 	Login(ctx context.Context, email, password string) (*model.User, error)

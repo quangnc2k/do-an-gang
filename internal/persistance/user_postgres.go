@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"regexp"
 	"time"
 )
@@ -20,6 +21,29 @@ func NewUserSQLRepo(ctx context.Context, conn *pgxpool.Pool) (UserRepository, er
 		return nil, errors.New("invalid sql connection")
 	}
 	return &UserRepositorySQL{connection: conn}, nil
+}
+
+func (ds *UserRepositorySQL) List(ctx context.Context) (users []model.User, err error) {
+	query := `SELECT id, email, password, created_at, updated_at FROM users`
+	rows, err := ds.connection.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var user model.User
+
+		err = rows.Scan(&user.ID, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		users = append(users, user)
+	}
+
+	return
 }
 
 func (ds *UserRepositorySQL) FindOneByEmail(ctx context.Context, email string) (*model.User, error) {
@@ -37,7 +61,6 @@ func (ds *UserRepositorySQL) FindOneByEmail(ctx context.Context, email string) (
 		ID:        id,
 		Email:     email,
 		Password:  password,
-		Scopes:    scopes,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 	}, nil
@@ -58,7 +81,6 @@ func (ds *UserRepositorySQL) FindOneByID(ctx context.Context, id string) (*model
 		ID:        _id,
 		Email:     email,
 		Password:  password,
-		Scopes:    scopes,
 		CreatedAt: createdAt,
 		UpdatedAt: updatedAt,
 	}, nil
