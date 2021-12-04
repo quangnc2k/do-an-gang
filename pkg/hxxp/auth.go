@@ -2,7 +2,6 @@ package hxxp
 
 import (
 	"context"
-	"git.cyradar.com/atd/atd/pkg/httputil"
 	"github.com/go-chi/jwtauth"
 	"github.com/lestrrat-go/jwx/jwt"
 	"net/http"
@@ -85,11 +84,6 @@ func Token(ctx context.Context) (jwt.Token, bool) {
 	return v, ok
 }
 
-func WebsocketAuth(ctx context.Context) bool {
-	v, ok := ctx.Value(ctxKeyWebsocketToken).(bool)
-	return ok && v
-}
-
 func scopesFromClaims(claims map[string]interface{}) (scopes []string, ok bool) {
 	scopesRaw, ok := claims["scopes"].([]interface{})
 	if !ok {
@@ -106,45 +100,4 @@ func scopesFromClaims(claims map[string]interface{}) (scopes []string, ok bool) 
 	}
 
 	return
-}
-
-func userActivityLog(ctx context.Context, store activityStore, withBody bool, r *http.Request, status int) {
-	permission := r.Header.Get(xPermission)
-
-	if permission == "" {
-		// skip these
-		return
-	}
-
-	userID, ok := UserID(r.Context())
-	if !ok || userID == "" {
-		return
-	}
-
-	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return
-	}
-
-	a := &UserActivity{
-		IPAddress:   ip,
-		UserID:      userID,
-		Method:      r.Method,
-		Endpoint:    r.URL.Path,
-		Status:      status,
-		Description: permission,
-	}
-
-	defer store(ctx, a)
-
-	if !((r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch) && withBody && r.Body != nil) {
-		return
-	}
-
-	body, err := httputil.DrainBody(r.Body)
-	if err != nil {
-		return
-	}
-
-	a.Body = body
 }

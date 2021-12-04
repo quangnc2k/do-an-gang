@@ -22,7 +22,7 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 	output = append(output, header)
 
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-	queryBuilder := psql.Select("created_at", "seen_at", "src_host", "dst_host", "confidence", "severity", "phase")
+	queryBuilder := psql.Select("created_at", "seen_at", "affected_host", "attacker_host", "confidence", "severity", "phase")
 	queryBuilder = queryBuilder.From("threats")
 
 	where := sq.And{
