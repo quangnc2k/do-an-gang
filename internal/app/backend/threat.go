@@ -1,12 +1,13 @@
 package backend
 
 import (
-	"github.com/quangnc2k/do-an-gang/internal/persistance"
-	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/quangnc2k/do-an-gang/internal/persistance"
+	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 )
 
 func threatsList(w http.ResponseWriter, r *http.Request) {

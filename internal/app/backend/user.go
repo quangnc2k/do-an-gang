@@ -2,12 +2,13 @@ package backend
 
 import (
 	"encoding/json"
+	"net/http"
+	"regexp"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
 	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
-	"net/http"
-	"regexp"
 )
 
 type createUserPayload struct {
