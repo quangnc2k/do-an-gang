@@ -2,9 +2,6 @@ package backend
 
 import (
 	"encoding/json"
-	"fmt"
-	"git.cyradar.com/atd/atd/pkg/httputil"
-	"git.cyradar.com/atd/atd/pkg/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
@@ -44,7 +41,7 @@ func usersCreate(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
-		hxxp.RespondJson(w, 500, "", nil)
+		hxxp.RespondJson(w, 500, err.Error(), nil)
 		return
 	}
 
@@ -98,27 +95,27 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentUserID, ok := middleware.UserID(r.Context())
+	currentUserID, ok := hxxp.UserID(r.Context())
 	if !ok {
-		hxxp.RespondJson(w, nil, fmt.Errorf("%w: invalid user id", httputil.ErrRequestValidation))
+		hxxp.RespondJson(w, http.StatusUnprocessableEntity, "invalid user id", nil)
 		return
 	}
 
 	if currentUserID == id {
 		err := persistance.GetRepoContainer().UserRepository.UpdateValidate(ctx, id, payload.OldPassword)
 		if err != nil {
-			httputil.Respond(ctx, w, r, nil, err)
+			hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
 	}
 
 	_id, err := persistance.GetRepoContainer().UserRepository.Update(ctx, id, payload.Password, payload.Scopes)
 	if err != nil {
-		httputil.Respond(ctx, w, r, nil, httputil.ErrResourceNotUpdated)
+		hxxp.RespondJson(w, http.StatusInternalServerError, "not updated", nil)
 		return
 	}
 
-	httputil.Respond(ctx, w, r, _id, nil)
+	hxxp.RespondJson(w, http.StatusOK, "success", _id)
 }
 
 func usersDelete(w http.ResponseWriter, r *http.Request) {
@@ -126,15 +123,15 @@ func usersDelete(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 	if id == "" {
-		httputil.Respond(ctx, w, r, nil, fmt.Errorf("%w: invalid user id", httputil.ErrRequestValidation))
+		hxxp.RespondJson(w, http.StatusForbidden, "invalid id", nil)
 		return
 	}
 
 	rows, err := persistance.GetRepoContainer().UserRepository.Delete(ctx, id)
 	if err != nil || rows == 0 {
-		httputil.Respond(ctx, w, r, nil, httputil.ErrResourceNotDeleted)
+		hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 
-	httputil.Respond(ctx, w, r, nil, nil)
+	hxxp.RespondJson(w, http.StatusOK, "", nil)
 }
