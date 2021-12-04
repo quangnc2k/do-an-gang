@@ -1,8 +1,7 @@
-package services
+package backend
 
 import (
 	"encoding/json"
-	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 	"net/http"
 	"time"
 
@@ -10,9 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/quangnc2k/do-an-gang/internal/config"
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
+	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 )
 
-func AuthenticatePasswordBased(w http.ResponseWriter, r *http.Request) {
+func authenticatePasswordBased(w http.ResponseWriter, r *http.Request) {
 	payload := authenticatePasswordBasedPayload{}
 
 	err := json.NewDecoder(r.Body).Decode(&payload)

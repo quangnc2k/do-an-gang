@@ -24,16 +24,21 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 	queryBuilder := psql.Select("created_at", "seen_at", "src_host", "dst_host", "confidence", "severity", "phase")
 	queryBuilder = queryBuilder.From("threats")
-	queryBuilder = queryBuilder.Where(
-		sq.And{
-			sq.GtOrEq{"created_at": start},
-			sq.LtOrEq{"created_at": end},
-			sq.Or{
-				sq.Like{"affected_host": search},
-				sq.Like{"attacker_host": search},
-				sq.Like{"phase": fmt.Sprintf("%%%s%%", search)},
-			},
-		}, start, end, search, search, search)
+
+	where := sq.And{
+		sq.GtOrEq{"created_at": start},
+		sq.LtOrEq{"created_at": end},
+	}
+
+	if search != "" {
+		where = append(where, sq.Or{
+			sq.Like{"affected_host": search},
+			sq.Like{"attacker_host": search},
+			sq.Like{"phase": fmt.Sprintf("%%%s%%", search)},
+		})
+	}
+
+	queryBuilder = queryBuilder.Where(where)
 	queryBuilder = queryBuilder.Offset(uint64(int64(page * perPage)))
 	queryBuilder = queryBuilder.Limit(uint64(int64(perPage)))
 	queryBuilder.OrderBy(orderBy)

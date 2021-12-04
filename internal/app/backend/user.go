@@ -1,4 +1,4 @@
-package services
+package backend
 
 import (
 	"encoding/json"
@@ -26,6 +26,8 @@ type updateUserPayload struct {
 }
 
 func usersList(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	data, err := persistance.GetRepoContainer().UserRepository.List(ctx)
 	if err != nil {
 		hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
@@ -98,19 +100,19 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) {
 
 	currentUserID, ok := middleware.UserID(r.Context())
 	if !ok {
-		httputil.Respond(ctx, w, r, nil, fmt.Errorf("%w: invalid user id", httputil.ErrRequestValidation))
+		hxxp.RespondJson(w, nil, fmt.Errorf("%w: invalid user id", httputil.ErrRequestValidation))
 		return
 	}
 
 	if currentUserID == id {
-		err := datastoreUser.UpdateValidate(ctx, id, payload.OldPassword)
+		err := persistance.GetRepoContainer().UserRepository.UpdateValidate(ctx, id, payload.OldPassword)
 		if err != nil {
 			httputil.Respond(ctx, w, r, nil, err)
 			return
 		}
 	}
 
-	_id, err := datastoreUser.Update(ctx, id, payload.Password, payload.Scopes)
+	_id, err := persistance.GetRepoContainer().UserRepository.Update(ctx, id, payload.Password, payload.Scopes)
 	if err != nil {
 		httputil.Respond(ctx, w, r, nil, httputil.ErrResourceNotUpdated)
 		return
@@ -121,11 +123,6 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) {
 
 func usersDelete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	datastoreUser, ok := ctxDatastoreUser(ctx)
-	if !ok {
-		httputil.Respond(ctx, w, r, nil, errServiceMissingDatastoreUser)
-		return
-	}
 
 	id := chi.URLParam(r, "id")
 	if id == "" {
@@ -133,7 +130,7 @@ func usersDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := datastoreUser.Delete(ctx, id)
+	rows, err := persistance.GetRepoContainer().UserRepository.Delete(ctx, id)
 	if err != nil || rows == 0 {
 		httputil.Respond(ctx, w, r, nil, httputil.ErrResourceNotDeleted)
 		return
