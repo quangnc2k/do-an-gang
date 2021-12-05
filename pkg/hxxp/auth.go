@@ -25,7 +25,6 @@ type UserActivity struct {
 
 type (
 	validatorCallback func(ctx context.Context, w http.ResponseWriter, r *http.Request, id string) error
-	activityStore     func(ctx context.Context, a *UserActivity)
 )
 
 func Authenticator(ctx context.Context, validator validatorCallback) func(next http.Handler) http.Handler {
