@@ -51,7 +51,7 @@ func (r *ThreatRepositorySQL) HistogramAffected(ctx context.Context, width strin
 
 		rows, err := r.connection.Query(ctx, query, width, start, end, host)
 		if err != nil {
-			return
+			return output, err
 		}
 
 		var dataset model.Dataset
@@ -63,7 +63,7 @@ func (r *ThreatRepositorySQL) HistogramAffected(ctx context.Context, width strin
 			err := rows.Scan(&t, &total)
 			if err != nil {
 				rows.Close()
-				return
+				return output, err
 			}
 
 			if i == 0 {

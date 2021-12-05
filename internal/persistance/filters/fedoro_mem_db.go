@@ -3,7 +3,6 @@ package filters
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 	"log"
 	"net"
@@ -14,13 +13,13 @@ import (
 
 type FedoroEngine struct {
 	Blacklist map[string]bool
-	mu *sync.RWMutex
+	mu        *sync.RWMutex
 }
 
 func (e *FedoroEngine) StoreIntoMem() (err error) {
 	client := hxxp.NewHTTPClient()
 
-	url := fmt.Sprintf("https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt")
+	url := "https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt"
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -37,7 +36,7 @@ func (e *FedoroEngine) StoreIntoMem() (err error) {
 	scanner := bufio.NewScanner(resp.Body)
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	for k, _ := range e.Blacklist {
+	for k := range e.Blacklist {
 		e.Blacklist[k] = false
 	}
 
@@ -81,9 +80,9 @@ func (e *FedoroEngine) Check(ctx context.Context, resource string) (marked bool,
 	return
 }
 
-func InitFedoroEngine(ctx context.Context) *FedoroEngine{
+func InitFedoroEngine(ctx context.Context) *FedoroEngine {
 	mu := sync.RWMutex{}
-	var m =  make(map[string]bool)
+	var m = make(map[string]bool)
 	blacklistEngine := FedoroEngine{
 		Blacklist: m,
 		mu:        &mu,
@@ -93,8 +92,6 @@ func InitFedoroEngine(ctx context.Context) *FedoroEngine{
 	if err != nil {
 		log.Fatalln("Initiate Blacklist Engine", err)
 	}
-
-	fmt.Println(blacklistEngine.Blacklist)
 
 	ticker := time.NewTicker(1 * time.Hour)
 	go func(ctx context.Context) {

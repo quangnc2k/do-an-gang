@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/pgxpool"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
 	"time"
 )

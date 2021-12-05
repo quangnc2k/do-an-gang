@@ -13,8 +13,6 @@ type Response struct {
 
 func RespondJson(w http.ResponseWriter, code int, message string, data interface{}) {
 	w.WriteHeader(code)
-	w.Header().Set("Content-Type", "application/json")
-
 	dataByte, err := json.Marshal(Response{
 		Message: message,
 		Data:    data,
@@ -24,5 +22,9 @@ func RespondJson(w http.ResponseWriter, code int, message string, data interface
 		return
 	}
 
-	_, _ = w.Write(dataByte)
+	_, err = w.Write(dataByte)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }

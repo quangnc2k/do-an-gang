@@ -25,10 +25,12 @@ func Migrate() func(c *cli.Context) error {
 
 func Run() func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		ctx, ok := c.App.Metadata["context"].(context.Context)
-		if !ok {
-			return errors.New("invalid root context")
-		}
+		//ctx, ok := c.App.Metadata["context"].(context.Context)
+		//if !ok {
+		//	return errors.New("invalid root context")
+		//}
+
+		ctx := context.Background()
 
 		return app.Process(ctx)
 	}
@@ -36,26 +38,20 @@ func Run() func(c *cli.Context) error {
 
 func main() {
 	a := &cli.App{}
-	a.Name = "Do An ATD"
-	a.Usage = "Post process for ATD"
-	a.Authors = []*cli.Author{
-		{
-			Name:  "Quang Nguyen",
-			Email: "quangnc@cyradar.com",
-		},
-	}
+	a.Name = "Do An"
+	a.Usage = "Post process"
 	a.Version = "1.0.0"
 	a.Compiled = time.Now()
 	a.Commands = []*cli.Command{
 		{
 			Name:   "run",
-			Usage:  "fetching events from queue and broadcasting them to the core",
+			Usage:  "fetching events from queue, serve backend",
 			Action: Run(),
 		},
 
 		{
 			Name:   "migrate",
-			Usage:  "create db",
+			Usage:  "create database",
 			Action: Migrate(),
 		},
 	}

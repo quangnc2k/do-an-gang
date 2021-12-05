@@ -10,6 +10,46 @@ import (
 	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 )
 
+type bucket struct {
+	asString string
+	duration time.Duration
+}
+
+var buckets = []bucket{
+	{
+		asString: "15 min",
+		duration: 15 * time.Minute,
+	},
+	{
+		asString: "1 hour",
+		duration: 1 * time.Hour,
+	},
+	{
+		asString: "6 hour",
+		duration: 6 * time.Hour,
+	},
+	{
+		asString: "12 hour",
+		duration: 12 * time.Hour,
+	},
+	{
+		asString: "1 day",
+		duration: 24 * time.Hour,
+	},
+	{
+		asString: "3 day",
+		duration: 3 * 24 * time.Hour,
+	},
+	{
+		asString: "7 day",
+		duration: 7 * 24 * time.Hour,
+	},
+	{
+		asString: "14 day",
+		duration: 14 * 24 * time.Hour,
+	},
+}
+
 func threatsList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -21,8 +61,8 @@ func threatsList(w http.ResponseWriter, r *http.Request) {
 	page, _ := strconv.Atoi(pageString)
 
 	ppageString := r.URL.Query().Get("perPage")
-	if pageString == "" {
-		pageString = "1"
+	if ppageString == "" {
+		ppageString = "1"
 	}
 
 	ppage, _ := strconv.Atoi(ppageString)
@@ -219,6 +259,57 @@ func threatTopAttacker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := persistance.GetRepoContainer().ThreatRepository.TopAttacker(ctx, from, to)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	hxxp.RespondJson(w, 200, "Success", data)
+}
+
+func threatHistogramAffected(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	startString := r.URL.Query().Get("start")
+	if len(startString) == 0 {
+		hxxp.RespondJson(w, http.StatusBadRequest, "invalid query", nil)
+		return
+	}
+
+	from, err := time.Parse("2006-01-02T15:04:05.000Z", startString)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusBadRequest, "invalid query", nil)
+		return
+	}
+
+	endString := r.URL.Query().Get("end")
+	if len(endString) == 0 {
+		hxxp.RespondJson(w, http.StatusBadRequest, "invalid query", nil)
+		return
+	}
+
+	to, err := time.Parse("2006-01-02T15:04:05.000Z", endString)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusBadRequest, "invalid query", nil)
+		return
+	}
+
+	if to.Before(from) {
+		hxxp.RespondJson(w, http.StatusBadRequest, "invalid query", nil)
+		return
+	}
+
+	diff := to.Sub(from)
+	spaceString := ""
+	space := diff / 20
+
+	for _, b := range buckets {
+		if b.duration < space {
+			spaceString = b.asString
+		}
+	}
+
+	data, err := persistance.GetRepoContainer().ThreatRepository.HistogramAffected(ctx, spaceString, from, to)
 	if err != nil {
 		hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
 		return

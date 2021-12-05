@@ -20,6 +20,9 @@ func (pm *PostgresMigrator) Migrate(ctx context.Context, target int) (err error)
 	)
 
 	db, err := sql.Open("postgres", conn)
+	if err != nil {
+		return
+	}
 
 	_, err = db.Exec("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;")
 	if err != nil {
@@ -43,6 +46,6 @@ func (pm *PostgresMigrator) Migrate(ctx context.Context, target int) (err error)
 	return m.Up()
 }
 
-func NewPostgresMigrator(ctx context.Context) *PostgresMigrator{
+func NewPostgresMigrator(ctx context.Context) *PostgresMigrator {
 	return &PostgresMigrator{}
 }

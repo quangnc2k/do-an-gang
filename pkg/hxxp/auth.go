@@ -8,10 +8,12 @@ import (
 )
 
 const (
-	ctxKeyToken  = "token"
-	ctxKeyUserID = "user_id"
-	ctxKeyClaims = "claims"
+	ctxKeyToken  ctxKey = "token"
+	ctxKeyUserID ctxKey = "user_id"
+	ctxKeyClaims ctxKey = "claims"
 )
+
+type ctxKey string
 
 type UserActivity struct {
 	IPAddress   string `json:"ip_address"`
@@ -41,20 +43,20 @@ func Authenticator(ctx context.Context, validator validatorCallback) func(next h
 				return
 			}
 
-			jti, ok := claims["jti"].(string)
-			if !ok {
-				RespondJson(w, http.StatusForbidden, "missing JWT", nil)
-				return
-			}
-
-			if err := validator(ctx, w, r, jti); err != nil {
-				RespondJson(w, http.StatusForbidden, "missing JWT", nil)
-				return
-			}
+			//jti, ok := claims["jti"].(string)
+			//if !ok {
+			//	RespondJson(w, http.StatusForbidden, "missing JWT", nil)
+			//	return
+			//}
 
 			userID, ok := claims["user_id"].(string)
 			if !ok {
 				RespondJson(w, http.StatusForbidden, "missing user id in jwt", nil)
+				return
+			}
+
+			if err := validator(ctx, w, r, userID); err != nil {
+				RespondJson(w, http.StatusForbidden, "missing JWT", nil)
 				return
 			}
 
@@ -81,22 +83,4 @@ func UserID(ctx context.Context) (string, bool) {
 func Token(ctx context.Context) (jwt.Token, bool) {
 	v, ok := ctx.Value(ctxKeyToken).(jwt.Token)
 	return v, ok
-}
-
-func scopesFromClaims(claims map[string]interface{}) (scopes []string, ok bool) {
-	scopesRaw, ok := claims["scopes"].([]interface{})
-	if !ok {
-		return
-	}
-
-	for _, v := range scopesRaw {
-		s, isString := v.(string)
-		if !isString {
-			continue
-		}
-
-		scopes = append(scopes, s)
-	}
-
-	return
 }

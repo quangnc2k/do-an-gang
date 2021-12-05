@@ -11,8 +11,8 @@ import (
 func Run(ctx context.Context) (err error) {
 	var producers, consumer, storer sync.WaitGroup
 
-	var processChan chan services.RawPayload
-	var threatChan chan model.Threat
+	var processChan = make(chan services.RawPayload)
+	var threatChan = make(chan model.Threat)
 
 	log.Println("Running....")
 	services.PopDataFromQueue(ctx, &producers, processChan)

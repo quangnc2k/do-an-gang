@@ -34,6 +34,9 @@ func Init() {
 	if err != nil {
 		log.Fatalln("Unable to read env variables: ", err)
 	}
+	if environment.JWTSecret == "" || len(environment.JWTSecret) < 16 {
+		log.Fatalln("Invalid jwt: ", environment.JWTSecret)
 
+	}
 	Env = environment
 }
