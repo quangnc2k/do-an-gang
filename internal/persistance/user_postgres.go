@@ -48,11 +48,10 @@ func (ds *UserRepositorySQL) List(ctx context.Context) (users []model.User, err 
 
 func (ds *UserRepositorySQL) FindOneByEmail(ctx context.Context, email string) (*model.User, error) {
 	var id, password string
-	var scopes []string
 	var createdAt, updatedAt time.Time
 
-	query := "SELECT id, email, password, scopes, created_at, updated_at FROM users WHERE email = $1"
-	err := ds.connection.QueryRow(ctx, query, email).Scan(&id, &email, &password, &scopes, &createdAt, &updatedAt)
+	query := "SELECT id, email, password, created_at, updated_at FROM users WHERE email = $1"
+	err := ds.connection.QueryRow(ctx, query, email).Scan(&id, &email, &password, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -68,11 +67,10 @@ func (ds *UserRepositorySQL) FindOneByEmail(ctx context.Context, email string) (
 
 func (ds *UserRepositorySQL) FindOneByID(ctx context.Context, id string) (*model.User, error) {
 	var _id, email, password string
-	var scopes []string
 	var createdAt, updatedAt time.Time
 
-	query := "SELECT id, email, password, scopes, created_at, updated_at FROM users WHERE id = $1"
-	err := ds.connection.QueryRow(ctx, query, id).Scan(&_id, &email, &password, &scopes, &createdAt, &updatedAt)
+	query := "SELECT id, email, password, created_at, updated_at FROM users WHERE id = $1"
+	err := ds.connection.QueryRow(ctx, query, id).Scan(&_id, &email, &password, &createdAt, &updatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -125,11 +123,10 @@ func (ds *UserRepositorySQL) Create(ctx context.Context, id, email, pw string, s
 
 	row := ds.connection.QueryRow(
 		ctx,
-		"INSERT INTO users (id, email, password, scopes, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;",
+		"INSERT INTO users (id, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;",
 		id,
 		email,
 		hashedPw,
-		scopes,
 		time.Now(),
 		time.Now())
 

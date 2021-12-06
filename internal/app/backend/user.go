@@ -65,7 +65,7 @@ func usersCreate(w http.ResponseWriter, r *http.Request) {
 		uuid.New().String(),
 		payload.Email,
 		payload.Password,
-		payload.Scopes)
+		nil)
 	if err != nil {
 		hxxp.RespondJson(w, 500, "Save failed", nil)
 		return

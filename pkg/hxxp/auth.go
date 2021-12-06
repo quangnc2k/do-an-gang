@@ -34,7 +34,7 @@ func Authenticator(ctx context.Context, validator validatorCallback) func(next h
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token, claims, err := jwtauth.FromContext(r.Context())
 			if err != nil {
-				RespondJson(w, http.StatusForbidden, "missing JWT", nil)
+				RespondJson(w, http.StatusForbidden, err.Error(), nil)
 				return
 			}
 
