@@ -15,7 +15,7 @@ import (
 	"github.com/quangnc2k/do-an-gang/internal/config"
 )
 
-func ServeBackend(ctx context.Context) (err error) {
+func ServeBackend(ctx context.Context, addr string) (err error) {
 	jwt := jwtauth.New("HS256", []byte(config.Env.JWTSecret), nil)
 
 	r := chi.NewRouter()
@@ -69,7 +69,7 @@ func ServeBackend(ctx context.Context) (err error) {
 		r.Post("/login", authenticatePasswordBased)
 	})
 
-	srv := &http.Server{Addr: ":8080", Handler: r}
+	srv := &http.Server{Addr: addr, Handler: r}
 	log.Fatal(srv.ListenAndServe())
 	return
 }

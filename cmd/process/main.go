@@ -25,14 +25,23 @@ func Migrate() func(c *cli.Context) error {
 
 func Run() func(c *cli.Context) error {
 	return func(c *cli.Context) error {
-		//ctx, ok := c.App.Metadata["context"].(context.Context)
-		//if !ok {
-		//	return errors.New("invalid root context")
-		//}
-
-		ctx := context.Background()
+		ctx, ok := c.App.Metadata["context"].(context.Context)
+		if !ok {
+			return errors.New("invalid root context")
+		}
 
 		return app.Process(ctx)
+	}
+}
+
+func Serve() func(c *cli.Context) error {
+	return func(c *cli.Context) error {
+		ctx, ok := c.App.Metadata["context"].(context.Context)
+		if !ok {
+			return errors.New("invalid root context")
+		}
+
+		return app.ServeBackend(ctx, c.String("addr"))
 	}
 }
 
@@ -48,11 +57,22 @@ func main() {
 			Usage:  "fetching events from queue, serve backend",
 			Action: Run(),
 		},
-
 		{
 			Name:   "migrate",
 			Usage:  "create database",
 			Action: Migrate(),
+		},
+		{
+			Name:   "serve",
+			Usage:  "create database",
+			Action: Serve(),
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "addr",
+					Value: ":8080",
+					Usage: "set address for backend to serve on",
+				},
+			},
 		},
 	}
 	a.Flags = []cli.Flag{
