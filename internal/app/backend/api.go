@@ -65,6 +65,14 @@ func ServeBackend(ctx context.Context, addr string) (err error) {
 				r.Patch("/{id}/resolve", alertResolve)
 				r.Patch("/resolve", alertResolveMultiple)
 			})
+
+			r.Route("/alert-configs", func(r chi.Router) {
+				r.Get("/", alertsList)
+				r.Post("/", alertConfigCreateOne)
+				r.Get("/{id}", alertConfigReadOne)
+				r.Patch("/{id}", alertConfigUpdateOne)
+				r.Delete("/{id}", alertConfigDeleteOne)
+			})
 		})
 
 		r.Post("/login", authenticatePasswordBased)
