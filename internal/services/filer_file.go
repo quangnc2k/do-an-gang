@@ -23,7 +23,7 @@ func ProcessFile(ctx context.Context, data string) (marked bool, threat model.Th
 
 	marked, credit, xtra, err := persistance.FileEngine.Check(ctx, fileLog.MD5)
 	if err != nil {
-		log.Println(ErrNoticePrefix, err)
+		log.Println(ErrFilePrefix, err)
 		return
 	}
 

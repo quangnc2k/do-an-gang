@@ -3,6 +3,7 @@ package filters
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 	"log"
 	"net"
@@ -66,14 +67,16 @@ func (e *FedoroEngine) ClearFromMem() (err error) {
 }
 
 func (e *FedoroEngine) Check(ctx context.Context, resource string) (marked bool, credit float64, extraResource interface{}, err error) {
-	var extra map[string]interface{}
+	extra := make(map[string]interface{})
 
 	e.mu.RLock()
 	defer e.mu.RUnlock()
+	fmt.Println(resource)
 	if e.Blacklist[resource] {
 		marked = true
 		credit = 8
 		extra["description"] = "Detected with Fedoro blacklist"
+		fmt.Println("marked")
 	}
 
 	extraResource = extra

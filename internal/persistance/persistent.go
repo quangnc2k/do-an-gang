@@ -12,9 +12,10 @@ import (
 var repoContainer RepositoryContainer
 
 type RepositoryContainer struct {
-	ThreatRepository ThreatRepository
-	UserRepository   UserRepository
-	AlertRepository  AlertRepository
+	ThreatRepository      ThreatRepository
+	UserRepository        UserRepository
+	AlertRepository       AlertRepository
+	AlertConfigRepository AlertConfigRepository
 }
 
 func GetRepoContainer() RepositoryContainer {
@@ -32,7 +33,7 @@ func LoadRepoContainerWithPgx(ctx context.Context) {
 		log.Fatalln("Cannot init repositories", err)
 	}
 
-	cfg.MaxConns = 10
+	cfg.MaxConns = 30
 
 	conn, err := pgxpool.ConnectConfig(ctx, cfg)
 	if err != nil {
@@ -54,10 +55,16 @@ func LoadRepoContainerWithPgx(ctx context.Context) {
 		log.Fatalln("Cannot init alert repositories", err)
 	}
 
+	alertConfigRepo, err := NewAlertConfigSQLRepo(ctx, conn)
+	if err != nil {
+		log.Fatalln("Cannot init alert config repositories", err)
+	}
+
 	//Load database global var with this
 	repoContainer = RepositoryContainer{
-		ThreatRepository: threatRepo,
-		UserRepository:   userRepo,
-		AlertRepository:  alertRepo,
+		ThreatRepository:      threatRepo,
+		UserRepository:        userRepo,
+		AlertRepository:       alertRepo,
+		AlertConfigRepository: alertConfigRepo,
 	}
 }

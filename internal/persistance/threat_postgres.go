@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"time"
 
@@ -323,9 +324,9 @@ func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []
 			severity = "low"
 		}
 		query := "INSERT INTO threats (id, created_at, seen_at, affected_host, attacker_host, conn_id, severity, confidence, phase, metadata)" +
-			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
 		batch.Queue(query,
-			threat.ID,
+			uuid.New().String(),
 			time.Now(),
 			threat.SeenAt,
 			threat.AffectedHost,
@@ -343,10 +344,12 @@ func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []
 
 	defer batchResult.Close()
 
-	_, err = batchResult.Exec()
+	tag, err := batchResult.Exec()
 	if err != nil {
 		return
 	}
+
+	fmt.Println(tag)
 
 	return nil
 }

@@ -2,8 +2,8 @@ package something
 
 import "encoding/json"
 
-func CombineAsMetadata(args... interface{}) map[string]interface{}{
-	var m map[string]interface{}
+func CombineAsMetadata(args ...interface{}) map[string]interface{} {
+	m := make(map[string]interface{})
 	for _, arg := range args {
 		var tmp map[string]interface{}
 

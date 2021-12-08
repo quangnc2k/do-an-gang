@@ -3,7 +3,7 @@ package persistance
 import (
 	"context"
 	"errors"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
 	"log"
@@ -72,7 +72,7 @@ func (r *AlertConfigRepositorySQL) FindOneByID(ctx context.Context, id string) (
 	return
 }
 
-func (r *AlertConfigRepositorySQL) UpdateOneID(ctx context.Context, config model.AlertConfig, id string) (err error) {
+func (r *AlertConfigRepositorySQL) UpdateOneByID(ctx context.Context, config model.AlertConfig, id string) (err error) {
 	_, err = r.FindOneByID(ctx, id)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -103,7 +103,7 @@ func (r *AlertConfigRepositorySQL) UpdateOneID(ctx context.Context, config model
 	return
 }
 
-func (r *AlertConfigRepositorySQL) DeleteOneByID(ctx context.Context, id string) (config model.AlertConfig, err error) {
+func (r *AlertConfigRepositorySQL) DeleteOneByID(ctx context.Context, id string) (err error) {
 	_, err = r.FindOneByID(ctx, id)
 	if err != nil {
 		if err == pgx.ErrNoRows {
