@@ -2,6 +2,7 @@ package backend
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -18,9 +19,8 @@ type createUserPayload struct {
 }
 
 type updateUserPayload struct {
-	Password    string   `json:"password"`
-	OldPassword string   `json:"old_password,omitempty"`
-	Scopes      []string `json:"scopes"`
+	Password    string `json:"password"`
+	OldPassword string `json:"old_password,omitempty"`
 }
 
 func usersList(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +67,7 @@ func usersCreate(w http.ResponseWriter, r *http.Request) {
 		payload.Password,
 		nil)
 	if err != nil {
-		hxxp.RespondJson(w, 500, "Save failed", nil)
+		hxxp.RespondJson(w, 500, fmt.Sprintf("Save failed:", err.Error()), nil)
 		return
 	}
 
@@ -92,13 +92,13 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if payload.Password == "" || payload.OldPassword == "" {
-		hxxp.RespondJson(w, http.StatusUnprocessableEntity, "invalid password", nil)
+		hxxp.RespondJson(w, http.StatusUnprocessableEntity, "invalid password/old password", nil)
 		return
 	}
 
 	currentUserID, ok := hxxp.UserID(r.Context())
 	if !ok {
-		hxxp.RespondJson(w, http.StatusUnprocessableEntity, "invalid user id", nil)
+		hxxp.RespondJson(w, http.StatusUnprocessableEntity, "can't change others", nil)
 		return
 	}
 
@@ -108,9 +108,12 @@ func usersUpdate(w http.ResponseWriter, r *http.Request) {
 			hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
+	} else {
+		hxxp.RespondJson(w, http.StatusForbidden, "invalid user", nil)
+		return
 	}
 
-	_id, err := persistance.GetRepoContainer().UserRepository.Update(ctx, id, payload.Password, payload.Scopes)
+	_id, err := persistance.GetRepoContainer().UserRepository.Update(ctx, id, payload.Password)
 	if err != nil {
 		hxxp.RespondJson(w, http.StatusInternalServerError, "not updated", nil)
 		return
@@ -124,7 +127,7 @@ func usersDelete(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 	if id == "" {
-		hxxp.RespondJson(w, http.StatusForbidden, "invalid id", nil)
+		hxxp.RespondJson(w, http.StatusBadRequest, "invalid id", nil)
 		return
 	}
 
@@ -134,5 +137,5 @@ func usersDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hxxp.RespondJson(w, http.StatusOK, "", nil)
+	hxxp.RespondJson(w, http.StatusOK, "Success", nil)
 }

@@ -3,6 +3,7 @@ package persistance
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
@@ -24,7 +25,7 @@ func NewUserSQLRepo(ctx context.Context, conn *pgxpool.Pool) (UserRepository, er
 }
 
 func (ds *UserRepositorySQL) List(ctx context.Context) (users []model.User, err error) {
-	query := `SELECT id, email, password, created_at, updated_at FROM users`
+	query := `SELECT id, email, created_at, updated_at FROM users`
 	rows, err := ds.connection.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -123,7 +124,8 @@ func (ds *UserRepositorySQL) Create(ctx context.Context, id, email, pw string, s
 
 	row := ds.connection.QueryRow(
 		ctx,
-		"INSERT INTO users (id, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;",
+		"INSERT INTO users (id, email, password, created_at, updated_at) "+
+			"VALUES ($1, $2, $3, $4, $5) RETURNING id;",
 		id,
 		email,
 		hashedPw,
@@ -144,6 +146,8 @@ func (ds *UserRepositorySQL) UpdateValidate(ctx context.Context, id, oldPassword
 		return ErrUserNotFound
 	}
 
+	fmt.Println(user.Password)
+	fmt.Println(bcrypt.GenerateFromPassword([]byte(oldPassword), 10))
 	if oldPassword != "" {
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword))
 		if err != nil {
@@ -153,7 +157,7 @@ func (ds *UserRepositorySQL) UpdateValidate(ctx context.Context, id, oldPassword
 	return
 }
 
-func (ds *UserRepositorySQL) Update(ctx context.Context, id, password string, scopes []string) (_id string, err error) {
+func (ds *UserRepositorySQL) Update(ctx context.Context, id, password string) (_id string, err error) {
 	_, err = ds.FindOneByID(ctx, id)
 	if err != nil {
 		return "", ErrUserNotFound
@@ -166,9 +170,8 @@ func (ds *UserRepositorySQL) Update(ctx context.Context, id, password string, sc
 
 	err = ds.connection.QueryRow(
 		ctx,
-		"UPDATE users SET password = $1, scopes=$2, updated_at=$3 WHERE id = $4 RETURNING id;",
+		"UPDATE users SET password = $1, updated_at=$2 WHERE id = $3 RETURNING id;",
 		hashedPw,
-		scopes,
 		time.Now(),
 		id).Scan(&_id)
 	if err != nil {

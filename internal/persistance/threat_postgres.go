@@ -19,7 +19,7 @@ type ThreatRepositorySQL struct {
 
 func (r *ThreatRepositorySQL) HistogramAffected(ctx context.Context, width string, start, end time.Time) (output model.LineChartData, err error) {
 	query1 := `SELECT affected_host FROM stats_threat_by_affected
-						WHERE t >= $1 AND t <= $2
+						WHERE _bucket >= $1 AND _bucket <= $2
 						GROUP BY affected_host 
 						ORDER BY SUM(count) DESC
 						LIMIT 10`
@@ -43,9 +43,9 @@ func (r *ThreatRepositorySQL) HistogramAffected(ctx context.Context, width strin
 	}
 
 	for i, host := range affectedHosts {
-		query := `SELECT time_bucket_gapfill($1, seen_at) as t, SUM(count) as total
+		query := `SELECT time_bucket_gapfill($1, _bucket) as t, SUM(count) as total
 					FROM stats_threat_by_affected
-					WHERE t >= $2 AND t <= $3 AND affected_host = $4
+					WHERE _bucket >= $2 AND _bucket <= $3 AND affected_host = $4
 					GROUP BY t, affected_host
 					ORDER BY t ASC`
 
@@ -58,7 +58,8 @@ func (r *ThreatRepositorySQL) HistogramAffected(ctx context.Context, width strin
 
 		for rows.Next() {
 			var t time.Time
-			var total int
+			var total *int
+			var emptyTotal int
 
 			err := rows.Scan(&t, &total)
 			if err != nil {
@@ -70,7 +71,11 @@ func (r *ThreatRepositorySQL) HistogramAffected(ctx context.Context, width strin
 				output.Labels = append(output.Labels, t.String())
 			}
 
-			dataset.Data = append(dataset.Data, total)
+			if total == nil {
+				total = &emptyTotal
+			}
+
+			dataset.Data = append(dataset.Data, *total)
 		}
 
 		dataset.Name = host
@@ -105,6 +110,7 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 		where = append(where, sq.Or{
 			sq.Like{"affected_host": search},
 			sq.Like{"attacker_host": search},
+			sq.Like{"severity": search},
 			sq.Like{"phase": fmt.Sprintf("%%%s%%", search)},
 		})
 	}
@@ -136,9 +142,8 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 		//
 		//err = rows.Scan(&row[0], &row[1], &row[2], &row[3], &row[4], &row[5], &row[6])
 		var createdAt, seenAt time.Time
-		var id, affectedHost, attackHost, phase string
+		var id, affectedHost, attackHost, severity, phase string
 		var confidence float64
-		var severity int
 		var metadata map[string]interface{}
 
 		err = rows.Scan(&id, &createdAt, &seenAt, &affectedHost, &attackHost, &confidence, &severity, &phase, &metadata)
@@ -148,15 +153,15 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 		}
 
 		output.Data = append(output.Data, model.Threat{
-			ID:           id,
-			CreatedAt:    createdAt,
-			SeenAt:       seenAt,
-			AffectedHost: affectedHost,
-			AttackerHost: attackHost,
-			Confidence:   confidence,
-			Severity:     severity,
-			Phase:        phase,
-			Metadata:     metadata,
+			ID:             id,
+			CreatedAt:      createdAt,
+			SeenAt:         seenAt,
+			AffectedHost:   affectedHost,
+			AttackerHost:   attackHost,
+			Confidence:     confidence,
+			SeverityString: severity,
+			Phase:          phase,
+			Metadata:       metadata,
 		})
 	}
 
@@ -307,6 +312,16 @@ func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []
 	}
 
 	for _, threat := range threats {
+		var severity string
+		if threat.Severity >= 3 {
+			severity = "critical"
+		} else if threat.Severity >= 2 {
+			severity = "high"
+		} else if threat.Severity >= 1 {
+			severity = "medium"
+		} else {
+			severity = "low"
+		}
 		query := "INSERT INTO threats (id, created_at, seen_at, affected_host, attacker_host, conn_id, severity, confidence, phase, metadata)" +
 			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 		batch.Queue(query,
@@ -316,7 +331,7 @@ func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []
 			threat.AffectedHost,
 			threat.AttackerHost,
 			threat.ConnID,
-			threat.Severity,
+			severity,
 			threat.Confidence,
 			threat.Phase,
 			threat.Metadata,

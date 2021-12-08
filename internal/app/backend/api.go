@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth"
 	"github.com/quangnc2k/do-an-gang/internal/config"
@@ -33,6 +33,7 @@ func ServeBackend(ctx context.Context, addr string) (err error) {
 		r.Use(chiMiddleware.URLFormat)
 		r.Use(chiMiddleware.Timeout(30 * time.Second))
 		r.Use(chiMiddleware.Recoverer)
+		r.Use(chiMiddleware.Logger)
 		r.Use(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "application/json")

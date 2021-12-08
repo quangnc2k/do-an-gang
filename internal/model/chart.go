@@ -11,7 +11,7 @@ type PaginateData struct {
 		} `json:"pagination"`
 	} `json:"links"`
 
-	Data []interface{}
+	Data []interface{} `json:"data"`
 }
 
 type LineChartData struct {

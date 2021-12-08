@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -77,13 +78,13 @@ func threatsList(w http.ResponseWriter, r *http.Request) {
 
 		if len(orderBy) == 2 {
 			if orderBy[1] != "asc" && orderBy[1] != "desc" {
-				hxxp.RespondJson(w, http.StatusBadRequest, "invalid query", nil)
+				hxxp.RespondJson(w, http.StatusBadRequest, fmt.Sprintf("invalid query: %s", orderBy), nil)
 				return
 			}
 		}
 
-		if len(orderBy) >= 2 {
-			hxxp.RespondJson(w, http.StatusBadRequest, "invalid query", nil)
+		if len(orderBy) > 2 {
+			hxxp.RespondJson(w, http.StatusBadRequest, fmt.Sprintf("invalid query: %s", orderBy), nil)
 			return
 		}
 	}

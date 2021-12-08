@@ -61,6 +61,13 @@ func main() {
 			Name:   "migrate",
 			Usage:  "create database",
 			Action: Migrate(),
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:  "reset",
+					Value: false,
+					Usage: "reset database",
+				},
+			},
 		},
 		{
 			Name:   "serve",
