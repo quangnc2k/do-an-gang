@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 type FileLog struct {
 	TS               float64                `json:"ts,omitempty"`
 	FUID             string                 `json:"fuid,omitempty"`
@@ -33,4 +35,21 @@ type FileLog struct {
 	ResponseMAC      string                 `json:"resp_mac,omitempty"`
 
 	Metadata map[string]interface{} `json:"-"`
+}
+
+func (log *FileLog) SetMetadata() error {
+	var m map[string]interface{}
+	jsonized, err := json.Marshal(log)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonized, &m)
+	if err != nil {
+		return err
+	}
+
+	log.Metadata = m
+
+	return nil
 }

@@ -25,6 +25,12 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 		return
 	}
 
+	err = noticeLog.SetMetadata()
+	if err != nil {
+		log.Println(ErrNoticePrefix, err)
+		return
+	}
+
 	marked, credit, xtra, err := persistance.IPEngine.Check(ctx, noticeLog.ID.OriginalHost)
 	if err != nil {
 		log.Println(ErrNoticePrefix, err)
@@ -47,15 +53,12 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 		AttackerHost: src,
 		ConnID:       something.ExtractFromJsonMap(m, "uid").(string),
 		Confidence:   something.ExtractFromJsonMap(m, "confidence").(float64),
-		Severity:     something.ExtractFromJsonMap(m, "severity").(int),
+		Severity:     something.ExtractFromJsonMap(m, "severity").(float64),
 		Phase:        something.ExtractFromJsonMap(m, "phase").(string),
 	}
 
 	if credit > 0 {
 		threat.Severity += 1
-		if threat.Severity > 4 {
-			threat.Severity = 4
-		}
 		threat.Confidence += credit / 2
 	}
 

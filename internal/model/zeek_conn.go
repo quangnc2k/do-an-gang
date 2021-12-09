@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 type ConnLog struct {
 	TS                 float64  `json:"ts,omitempty"`
 	UID                string   `json:"uid,omitempty"`
@@ -24,4 +26,21 @@ type ConnLog struct {
 	SpeculativeService string   `json:"speculative_service,omitempty"`
 
 	Metadata map[string]interface{} `json:"-"`
+}
+
+func (log *ConnLog) SetMetadata() error {
+	var m map[string]interface{}
+	jsonized, err := json.Marshal(log)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonized, &m)
+	if err != nil {
+		return err
+	}
+
+	log.Metadata = m
+
+	return nil
 }

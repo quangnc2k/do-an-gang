@@ -7,7 +7,6 @@ import (
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
 	"github.com/quangnc2k/do-an-gang/pkg/something"
 	"log"
-	"math"
 )
 
 var ErrBlacklistPrefix = "blacklist filter failed: "
@@ -20,7 +19,13 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 
 	err := json.Unmarshal([]byte(data), &connLog)
 	if err != nil {
-		log.Println(ErrFilePrefix, err)
+		log.Println(ErrBlacklistPrefix, err)
+		return
+	}
+
+	err = connLog.SetMetadata()
+	if err != nil {
+		log.Println(ErrBlacklistPrefix, err)
 		return
 	}
 
@@ -38,6 +43,8 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 		}
 	}
 
+	m := something.CombineAsMetadata(connLog.Metadata, xtra)
+
 	threat = model.Threat{
 		AffectedHost: connLog.ID.OriginalHost,
 		AttackerHost: connLog.ID.ResponseHost,
@@ -46,11 +53,11 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 	}
 
 	if credit > 0 {
-		threat.Severity += int(math.Floor(credit * 0.25))
+		threat.Severity += credit * 0.25
 		threat.Confidence += credit
 	}
 
-	threat.Metadata = something.CombineAsMetadata(connLog.Metadata, xtra)
+	threat.Metadata = m
 
 	return
 }
