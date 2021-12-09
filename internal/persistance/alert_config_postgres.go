@@ -26,10 +26,22 @@ func (r *AlertConfigRepositorySQL) GetAll(ctx context.Context) (configs []model.
 	for rows.Next() {
 		var config model.AlertConfig
 
-		err = rows.Scan(&config.ID, &config.Name, &config.CreatedAt, &config.Severity, &config.Confidence, &config.Recipients, &config.SuppressFor)
+		err = rows.Scan(&config.ID, &config.Name, &config.CreatedAt, &config.SeverityString, &config.Confidence, &config.Recipients, &config.SuppressFor)
 		if err != nil {
 			log.Println("get all configs", err)
 			continue
+		}
+
+		if config.SeverityString == "low" {
+			config.Severity = 1
+		} else if config.SeverityString == "medium" {
+			config.Severity = 2
+		} else if config.SeverityString == "high" {
+			config.Severity = 3
+		} else if config.SeverityString == "critical" {
+			config.Severity = 4
+		} else {
+			config.Severity = 0
 		}
 
 		configs = append(configs, config)
@@ -46,7 +58,7 @@ func (r *AlertConfigRepositorySQL) Create(ctx context.Context, config model.Aler
 		config.ID,
 		config.Name,
 		config.CreatedAt,
-		config.Severity,
+		config.SeverityString,
 		config.Confidence,
 		config.Recipients,
 		config.SuppressFor,
@@ -64,7 +76,7 @@ func (r *AlertConfigRepositorySQL) FindOneByID(ctx context.Context, id string) (
 				WHERE id = $1`
 
 	err = r.connection.QueryRow(ctx, query, id).
-		Scan(&config.ID, &config.Name, &config.CreatedAt, &config.Severity, &config.Confidence, &config.Recipients, &config.SuppressFor)
+		Scan(&config.ID, &config.Name, &config.CreatedAt, &config.SeverityString, &config.Confidence, &config.Recipients, &config.SuppressFor)
 	if err != nil {
 		return
 	}
@@ -90,7 +102,7 @@ func (r *AlertConfigRepositorySQL) UpdateOneByID(ctx context.Context, config mod
 				WHERE id = $6`
 	_, err = r.connection.Exec(ctx, query,
 		config.Name,
-		config.Severity,
+		config.SeverityString,
 		config.Confidence,
 		config.Recipients,
 		config.SuppressFor,
