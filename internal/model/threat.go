@@ -10,7 +10,7 @@ type Threat struct {
 	AttackerHost   string    `json:"dst_host,omitempty"`
 	ConnID         string    `json:"conn_id,omitempty"`
 	Confidence     float64   `json:"confidence"`
-	Severity       int       `json:"-"`
+	Severity       float64   `json:"-"`
 	SeverityString string    `json:"severity"`
 	Phase          string    `json:"phase"`
 
