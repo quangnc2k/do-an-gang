@@ -42,6 +42,10 @@ func ProcessFile(ctx context.Context, data string) (marked bool, threat model.Th
 		Phase:        model.LM,
 	}
 
+	if !marked {
+		return
+	}
+
 	m := something.CombineAsMetadata(fileLog.Metadata, xtra)
 
 	if credit > 0 {

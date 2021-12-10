@@ -3,7 +3,6 @@ package persistance
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
@@ -146,8 +145,6 @@ func (ds *UserRepositorySQL) UpdateValidate(ctx context.Context, id, oldPassword
 		return ErrUserNotFound
 	}
 
-	fmt.Println(user.Password)
-	fmt.Println(bcrypt.GenerateFromPassword([]byte(oldPassword), 10))
 	if oldPassword != "" {
 		err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword))
 		if err != nil {

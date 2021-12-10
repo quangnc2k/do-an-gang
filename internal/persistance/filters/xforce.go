@@ -9,10 +9,11 @@ import (
 	"net/http"
 	"sync"
 )
+
 type XForceEngine struct {
 	username string
-	password  string
-	mu      *sync.Mutex
+	password string
+	mu       *sync.Mutex
 }
 
 type XForceResponse struct {
@@ -26,7 +27,7 @@ type XForceResponse struct {
 func (e *XForceEngine) Check(ctx context.Context, resource string) (marked bool, credit float64, extraResource interface{}, err error) {
 	client := hxxp.NewHTTPClient()
 
-	url := fmt.Sprintf(" https://exchange.xforce.ibmcloud.com/api/ipr/%s", resource)
+	url := fmt.Sprintf("https://exchange.xforce.ibmcloud.com/api/ipr/%s", resource)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -48,7 +49,7 @@ func (e *XForceEngine) Check(ctx context.Context, resource string) (marked bool,
 		return
 	}
 
-	if respData.Score > 0 {
+	if respData.Score > 5 {
 		marked = true
 		credit = float64(respData.Score)
 	}
@@ -56,7 +57,7 @@ func (e *XForceEngine) Check(ctx context.Context, resource string) (marked bool,
 	return marked, credit, respData, nil
 }
 
-func InitXForceEngine(ctx context.Context) *XForceEngine{
+func InitXForceEngine(ctx context.Context) *XForceEngine {
 	mu := new(sync.Mutex)
 
 	return &XForceEngine{

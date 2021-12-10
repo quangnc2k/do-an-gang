@@ -12,9 +12,11 @@ type RawPayload struct {
 	Data    string
 }
 
+const popper = 1
+
 func PopDataFromQueue(ctx context.Context, producers *sync.WaitGroup, outputChan chan<- RawPayload) {
 	// setup workers to pop and send payloads to inputs channel
-	for i := 0; i < 5; i++ {
+	for i := 0; i < popper; i++ {
 		producers.Add(1)
 		go func(ctx context.Context, wg *sync.WaitGroup, outputChan chan<- RawPayload) {
 			// this goroutine ends when the worker encounters an error from rdb
@@ -27,7 +29,7 @@ func PopDataFromQueue(ctx context.Context, producers *sync.WaitGroup, outputChan
 				default:
 					ch, data, err := persistance.GetQueue().Pop(ctx)
 					if err != nil {
-						if err != persistance.ErrOutOfItem{
+						if err != persistance.ErrOutOfItem {
 							log.Println("worker encountered error", "error", err.Error())
 							return
 						}

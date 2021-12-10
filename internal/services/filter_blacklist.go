@@ -43,6 +43,10 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 		}
 	}
 
+	if !marked {
+		return
+	}
+
 	m := something.CombineAsMetadata(connLog.Metadata, xtra)
 
 	threat = model.Threat{

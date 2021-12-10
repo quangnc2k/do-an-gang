@@ -18,20 +18,22 @@ type VTTEngine struct {
 
 type VTTResponse struct {
 	Data struct {
-		LastAnalysisStats struct {
-			Harmless   int `json:"harmless"`
-			Suspicious int `json:"suspicious"`
-			Malicious  int `json:"malicious"`
-			Undetected int `json:"undetected"`
-		} `json:"last_analysis_stats"`
+		Attributes struct {
+			LastAnalysisStats struct {
+				Harmless   int `json:"harmless"`
+				Suspicious int `json:"suspicious"`
+				Malicious  int `json:"malicious"`
+				Undetected int `json:"undetected"`
+			} `json:"last_analysis_stats"`
+		} `json:"attributes"`
 	} `json:"data"`
 }
 
 func (e *VTTEngine) Check(ctx context.Context, resource string) (marked bool, credit float64, extraResource interface{}, err error) {
 	client := hxxp.NewHTTPClient()
 
-	url := fmt.Sprintf(" https://www.virustotal.com/api/v3/files/%s", resource)
-
+	url := fmt.Sprintf("https://www.virustotal.com/api/v3/files/%s", resource)
+	fmt.Println(url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return
@@ -41,7 +43,7 @@ func (e *VTTEngine) Check(ctx context.Context, resource string) (marked bool, cr
 
 	e.mu.Lock()
 	defer func() {
-		time.Sleep(time.Duration(60 / config.Env.VTTMaxFilerPerMin) * 1000)
+		time.Sleep(time.Duration(60/config.Env.VTTMaxFilerPerMin) * 1000)
 		e.mu.Unlock()
 	}()
 
@@ -53,25 +55,32 @@ func (e *VTTEngine) Check(ctx context.Context, resource string) (marked bool, cr
 	defer resp.Body.Close()
 
 	var respData VTTResponse
-
 	err = json.NewDecoder(resp.Body).Decode(&respData)
 	if err != nil {
 		return
 	}
 
-	if respData.Data.LastAnalysisStats.Malicious+respData.Data.LastAnalysisStats.Suspicious > 0 {
+	fmt.Printf("%v", respData)
+
+	if respData.Data.Attributes.LastAnalysisStats.Malicious+
+		respData.Data.Attributes.LastAnalysisStats.Suspicious > 0 {
 		marked = true
 		credit = respData.getCredit()
 	}
 
-	return marked, credit, respData.Data.LastAnalysisStats, nil
+	return marked, credit, respData.Data.Attributes.LastAnalysisStats, nil
 }
 
 func (r *VTTResponse) getCredit() float64 {
-	return float64((r.Data.LastAnalysisStats.Malicious + r.Data.LastAnalysisStats.Suspicious) / (r.Data.LastAnalysisStats.Malicious + r.Data.LastAnalysisStats.Suspicious + r.Data.LastAnalysisStats.Harmless + r.Data.LastAnalysisStats.Undetected))
+	return float64(
+		(r.Data.Attributes.LastAnalysisStats.Malicious + r.Data.Attributes.LastAnalysisStats.Suspicious) /
+			(r.Data.Attributes.LastAnalysisStats.Malicious +
+				r.Data.Attributes.LastAnalysisStats.Suspicious +
+				r.Data.Attributes.LastAnalysisStats.Harmless +
+				r.Data.Attributes.LastAnalysisStats.Undetected))
 }
 
-func InitVTTEngine(ctx context.Context) *VTTEngine{
+func InitVTTEngine(ctx context.Context) *VTTEngine {
 	mu := new(sync.Mutex)
 
 	return &VTTEngine{

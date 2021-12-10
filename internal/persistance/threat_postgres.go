@@ -344,12 +344,10 @@ func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []
 
 	defer batchResult.Close()
 
-	tag, err := batchResult.Exec()
+	_, err = batchResult.Exec()
 	if err != nil {
 		return
 	}
-
-	fmt.Println(tag)
 
 	return nil
 }

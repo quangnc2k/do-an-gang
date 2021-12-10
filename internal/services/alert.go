@@ -20,7 +20,7 @@ func InitAlertStore(ctx context.Context) (err error) {
 
 func CheckAlert(ctx context.Context, threat model.Threat) (matched bool, err error) {
 	for _, config := range alertConfigStore {
-		if threat.Severity >= config.Severity {
+		if threat.Severity >= float64(config.Severity) {
 		}
 	}
 
