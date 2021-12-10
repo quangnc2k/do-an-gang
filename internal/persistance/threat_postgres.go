@@ -18,6 +18,85 @@ type ThreatRepositorySQL struct {
 	connection *pgxpool.Pool
 }
 
+func (r *ThreatRepositorySQL) RecentAffected(ctx context.Context) (hosts map[string]time.Time, err error) {
+	query := `SELECT affected_host, seen_at FROM threats ORDER BY seen_at LIMIT 50`
+
+	rows, err := r.connection.Query(ctx, query)
+	if err != nil {
+		return
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var host string
+		var t time.Time
+
+		err = rows.Scan(&host, &t)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		hosts[host] = t
+	}
+
+	return
+}
+
+func (r *ThreatRepositorySQL) RecentAttackByPhase(ctx context.Context) (phases map[string]time.Time, err error) {
+	query := `SELECT phase, seen_at FROM threats ORDER BY seen_at LIMIT 50`
+
+	rows, err := r.connection.Query(ctx, query)
+	if err != nil {
+		return
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var ph string
+		var t time.Time
+
+		err = rows.Scan(&ph, &t)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		phases[ph] = t
+	}
+
+	return
+}
+
+func (r *ThreatRepositorySQL) Overview(ctx context.Context) (total, recent, numOfHost int64) {
+	query := `SELECT COUNT(*) FROM threats`
+	err := r.connection.QueryRow(ctx, query).Scan(&total)
+	if err != nil {
+		return
+	}
+
+	query = `SELECT COUNT(*) FROM threats WHERE seen_at >= now() - INTERVAL '7 day' AND seen_at <= now()`
+	err = r.connection.QueryRow(ctx, query).Scan(&recent)
+	if err != nil {
+		return
+	}
+
+	query = `SELECT COUNT(DISTINCT affected_host) FROM threats`
+	err = r.connection.QueryRow(ctx, query).Scan(&numOfHost)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func NewThreatSQLRepo(ctx context.Context, conn *pgxpool.Pool) (ThreatRepository, error) {
+	if conn == nil {
+		return nil, errors.New("invalid sql connection")
+	}
+	return &ThreatRepositorySQL{connection: conn}, nil
+}
+
 func (r *ThreatRepositorySQL) HistogramAffected(ctx context.Context, width string, start, end time.Time) (output model.LineChartData, err error) {
 	query1 := `SELECT affected_host FROM stats_threat_by_affected
 						WHERE _bucket >= $1 AND _bucket <= $2
@@ -171,9 +250,9 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 
 func (r *ThreatRepositorySQL) StatsByPhase(ctx context.Context, start, end time.Time) (output model.PieChartData, err error) {
 	query := `SELECT
-    		phase, COUNT(*)
-			FROM threats
-			WHERE seen_at >= $1 AND seen_at <= $2
+    		phase, SUM(count)
+			FROM stats_threat_by_phase
+			WHERE _bucket >= $1 AND _bucket <= $2
 			GROUP BY phase
 			ORDER BY phase`
 
@@ -204,7 +283,7 @@ func (r *ThreatRepositorySQL) StatsByPhase(ctx context.Context, start, end time.
 
 func (r *ThreatRepositorySQL) StatsBySeverity(ctx context.Context, start, end time.Time) (output model.PieChartData, err error) {
 	query := `SELECT
-    		severity, COUNT(*)
+    		severity, SUM(count)
 			FROM stats_threat_by_severity
 			WHERE _bucket >= $1 AND _bucket <= $2
 			GROUP BY severity
@@ -298,13 +377,6 @@ func (r *ThreatRepositorySQL) TopAttacker(ctx context.Context, start, end time.T
 	return output, err
 }
 
-func NewThreatSQLRepo(ctx context.Context, conn *pgxpool.Pool) (ThreatRepository, error) {
-	if conn == nil {
-		return nil, errors.New("invalid sql connection")
-	}
-	return &ThreatRepositorySQL{connection: conn}, nil
-}
-
 func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []model.Threat) (err error) {
 	batch := &pgx.Batch{}
 
@@ -314,11 +386,11 @@ func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []
 
 	for _, threat := range threats {
 		var severity string
-		if threat.Severity >= 3 {
+		if threat.Severity > 8 {
 			severity = "critical"
-		} else if threat.Severity >= 2 {
+		} else if threat.Severity > 5 {
 			severity = "high"
-		} else if threat.Severity >= 1 {
+		} else if threat.Severity > 2 {
 			severity = "medium"
 		} else {
 			severity = "low"

@@ -33,7 +33,6 @@ func (e *VTTEngine) Check(ctx context.Context, resource string) (marked bool, cr
 	client := hxxp.NewHTTPClient()
 
 	url := fmt.Sprintf("https://www.virustotal.com/api/v3/files/%s", resource)
-	fmt.Println(url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return
@@ -43,7 +42,7 @@ func (e *VTTEngine) Check(ctx context.Context, resource string) (marked bool, cr
 
 	e.mu.Lock()
 	defer func() {
-		time.Sleep(time.Duration(60/config.Env.VTTMaxFilerPerMin) * 1000)
+		time.Sleep(time.Duration(60/config.Env.VTTMaxFilerPerMin) * 1000000000)
 		e.mu.Unlock()
 	}()
 
@@ -60,7 +59,7 @@ func (e *VTTEngine) Check(ctx context.Context, resource string) (marked bool, cr
 		return
 	}
 
-	fmt.Printf("%v", respData)
+	fmt.Println("Checked with vtt:", url, "got result", respData)
 
 	if respData.Data.Attributes.LastAnalysisStats.Malicious+
 		respData.Data.Attributes.LastAnalysisStats.Suspicious > 0 {
@@ -72,12 +71,13 @@ func (e *VTTEngine) Check(ctx context.Context, resource string) (marked bool, cr
 }
 
 func (r *VTTResponse) getCredit() float64 {
-	return float64(
-		(r.Data.Attributes.LastAnalysisStats.Malicious + r.Data.Attributes.LastAnalysisStats.Suspicious) /
-			(r.Data.Attributes.LastAnalysisStats.Malicious +
-				r.Data.Attributes.LastAnalysisStats.Suspicious +
-				r.Data.Attributes.LastAnalysisStats.Harmless +
-				r.Data.Attributes.LastAnalysisStats.Undetected))
+	total := r.Data.Attributes.LastAnalysisStats.Malicious +
+		r.Data.Attributes.LastAnalysisStats.Suspicious +
+		r.Data.Attributes.LastAnalysisStats.Harmless +
+		r.Data.Attributes.LastAnalysisStats.Undetected
+
+	score := r.Data.Attributes.LastAnalysisStats.Malicious + r.Data.Attributes.LastAnalysisStats.Suspicious
+	return float64(score) / float64(total)
 }
 
 func InitVTTEngine(ctx context.Context) *VTTEngine {

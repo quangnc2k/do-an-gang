@@ -20,6 +20,10 @@ func ProcessFile(ctx context.Context, data string) (marked bool, threat model.Th
 		return
 	}
 
+	if fileLog.MD5 == "" {
+		return
+	}
+
 	err = fileLog.SetMetadata()
 	if err != nil {
 		log.Println(ErrFilePrefix, err)
@@ -37,6 +41,7 @@ func ProcessFile(ctx context.Context, data string) (marked bool, threat model.Th
 	receiver := fileLog.RXHosts[0]
 
 	threat = model.Threat{
+		SeenAt:       something.ToTime(fileLog.TS),
 		AffectedHost: receiver,
 		AttackerHost: transmitter,
 		Phase:        model.LM,
@@ -49,8 +54,8 @@ func ProcessFile(ctx context.Context, data string) (marked bool, threat model.Th
 	m := something.CombineAsMetadata(fileLog.Metadata, xtra)
 
 	if credit > 0 {
-		threat.Severity += credit * 0.25
-		threat.Confidence += credit
+		threat.Severity += credit * 10
+		threat.Confidence = 0.9
 	}
 	threat.ConnID = something.ExtractFromJsonMap(m, "fuid").(string)
 	threat.Metadata = m

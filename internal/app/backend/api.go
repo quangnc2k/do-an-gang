@@ -78,6 +78,7 @@ func ServeBackend(ctx context.Context, addr string) (err error) {
 		r.Post("/login", authenticatePasswordBased)
 	})
 
+	log.Printf("Listening at %s\n", addr)
 	srv := &http.Server{Addr: addr, Handler: r}
 	log.Fatal(srv.ListenAndServe())
 	return

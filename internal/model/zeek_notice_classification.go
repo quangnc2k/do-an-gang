@@ -1,10 +1,10 @@
 package model
 
 const (
-	critical = 4
-	high     = 3
-	medium   = 2
-	low      = 1
+	critical = 10
+	high     = 8
+	medium   = 5
+	low      = 2
 	IA       = "Initial Access"
 	RD       = "Reconnaissance & Discovery"
 	LM       = "Lateral Movement"
@@ -17,7 +17,7 @@ type NoticeType struct {
 	Origin     string  `json:"origin"`
 	TypeHint   string  `json:"type_hint"`
 	Sub        string  `json:"sub"`
-	Severity   int     `json:"severity"`
+	Severity   float64 `json:"severity"`
 	Confidence float64 `json:"confidence"`
 	Phase      string  `json:"phase"`
 }

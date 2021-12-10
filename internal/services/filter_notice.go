@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/quangnc2k/do-an-gang/internal/model"
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
 	"github.com/quangnc2k/do-an-gang/pkg/something"
@@ -48,26 +47,21 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 		dest = noticeLog.ID.ResponseHost
 	}
 
-	if !marked {
-		return
-	}
-
 	m := something.CombineAsMetadata(noticeLog.Metadata, xtra, noticeLog.ExtraResource)
 
-	fmt.Println(m)
-	return
 	threat = model.Threat{
+		SeenAt:       something.ToTime(noticeLog.TS),
 		AffectedHost: dest,
 		AttackerHost: src,
 		ConnID:       something.ExtractFromJsonMap(m, "uid").(string),
 		Confidence:   something.ExtractFromJsonMap(m, "confidence").(float64),
-		Severity:     something.ExtractFromJsonMap(m, "severity").(float64),
+		Severity:     something.ExtractFromJsonMap(m, "severity").(float64) / 2,
 		Phase:        something.ExtractFromJsonMap(m, "phase").(string),
 	}
 
-	if credit > 0 {
-		threat.Severity += 1
-		threat.Confidence += credit / 2
+	if marked {
+		threat.Severity += credit / 2
+		threat.Confidence = 1
 	}
 
 	threat.Metadata = m

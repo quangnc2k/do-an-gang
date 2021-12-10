@@ -26,6 +26,14 @@ var buckets = []bucket{
 		duration: 1 * time.Hour,
 	},
 	{
+		asString: "2 hour",
+		duration: 2 * time.Hour,
+	},
+	{
+		asString: "4 hour",
+		duration: 4 * time.Hour,
+	},
+	{
 		asString: "6 hour",
 		duration: 6 * time.Hour,
 	},
@@ -302,7 +310,7 @@ func threatHistogramAffected(w http.ResponseWriter, r *http.Request) {
 
 	diff := to.Sub(from)
 	spaceString := ""
-	space := diff / 20
+	space := diff / 10
 
 	for _, b := range buckets {
 		if b.duration < space {
@@ -310,11 +318,14 @@ func threatHistogramAffected(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if spaceString == "" {
+		spaceString = "15 min"
+	}
+
 	data, err := persistance.GetRepoContainer().ThreatRepository.HistogramAffected(ctx, spaceString, from, to)
 	if err != nil {
 		hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
-
 	hxxp.RespondJson(w, 200, "Success", data)
 }

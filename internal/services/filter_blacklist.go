@@ -50,6 +50,7 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 	m := something.CombineAsMetadata(connLog.Metadata, xtra)
 
 	threat = model.Threat{
+		SeenAt:       something.ToTime(connLog.TS),
 		AffectedHost: connLog.ID.OriginalHost,
 		AttackerHost: connLog.ID.ResponseHost,
 		ConnID:       connLog.UID,
@@ -57,8 +58,8 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 	}
 
 	if credit > 0 {
-		threat.Severity += credit * 0.25
-		threat.Confidence += credit
+		threat.Severity += credit
+		threat.Confidence = 0.8
 	}
 
 	threat.Metadata = m

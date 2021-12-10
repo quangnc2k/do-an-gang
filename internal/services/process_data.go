@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"github.com/quangnc2k/do-an-gang/internal/model"
 	"sync"
 )
@@ -22,21 +21,16 @@ func ProcessData(ctx context.Context, consumers *sync.WaitGroup,
 					marked, threat := ProcessFile(ctx, payload.Data)
 					if marked {
 						outputChan <- threat
-						fmt.Println(threat)
 					}
 
 				case "notice":
-					marked, threat := ProcessNotice(ctx, payload.Data)
-					if marked {
-						outputChan <- threat
-						fmt.Println(threat)
-					}
-					
+					_, threat := ProcessNotice(ctx, payload.Data)
+					outputChan <- threat
+
 				default:
 					marked, threat := ProcessGeneral(ctx, payload.Data)
 					if marked {
 						outputChan <- threat
-						fmt.Println(threat)
 					}
 				}
 			}
