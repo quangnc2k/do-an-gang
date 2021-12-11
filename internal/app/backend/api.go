@@ -53,6 +53,10 @@ func ServeBackend(ctx context.Context, addr string) (err error) {
 
 			r.Route("/threats", func(r chi.Router) {
 				r.Get("/", threatsList)
+				r.Get("/overview", threatOverview)
+				r.Get("/recent-affected", recentAffectedHost)
+				r.Get("/recent-phase", recentAttackPhase)
+				
 				r.Get("/stats-severity", threatStatsSeverity)
 				r.Get("/stats-phase", threatStatsPhase)
 				r.Get("/stats-affected", threatTopAffectedHost)

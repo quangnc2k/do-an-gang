@@ -18,6 +18,13 @@ type ThreatRepositorySQL struct {
 	connection *pgxpool.Pool
 }
 
+func NewThreatSQLRepo(ctx context.Context, conn *pgxpool.Pool) (ThreatRepository, error) {
+	if conn == nil {
+		return nil, errors.New("invalid sql connection")
+	}
+	return &ThreatRepositorySQL{connection: conn}, nil
+}
+
 func (r *ThreatRepositorySQL) RecentAffected(ctx context.Context) (hosts map[string]time.Time, err error) {
 	query := `SELECT affected_host, seen_at FROM threats ORDER BY seen_at LIMIT 50`
 
@@ -68,9 +75,9 @@ func (r *ThreatRepositorySQL) RecentAttackByPhase(ctx context.Context) (phases m
 	return
 }
 
-func (r *ThreatRepositorySQL) Overview(ctx context.Context) (total, recent, numOfHost int64) {
+func (r *ThreatRepositorySQL) Overview(ctx context.Context) (total, recent, numOfHost int64, err error) {
 	query := `SELECT COUNT(*) FROM threats`
-	err := r.connection.QueryRow(ctx, query).Scan(&total)
+	err = r.connection.QueryRow(ctx, query).Scan(&total)
 	if err != nil {
 		return
 	}
@@ -88,13 +95,6 @@ func (r *ThreatRepositorySQL) Overview(ctx context.Context) (total, recent, numO
 	}
 
 	return
-}
-
-func NewThreatSQLRepo(ctx context.Context, conn *pgxpool.Pool) (ThreatRepository, error) {
-	if conn == nil {
-		return nil, errors.New("invalid sql connection")
-	}
-	return &ThreatRepositorySQL{connection: conn}, nil
 }
 
 func (r *ThreatRepositorySQL) HistogramAffected(ctx context.Context, width string, start, end time.Time) (output model.LineChartData, err error) {

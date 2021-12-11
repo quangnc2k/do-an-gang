@@ -59,6 +59,46 @@ var buckets = []bucket{
 	},
 }
 
+func recentAttackPhase(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	data, err := persistance.GetRepoContainer().ThreatRepository.RecentAttackByPhase(ctx)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	hxxp.RespondJson(w, 200, "Success", data)
+}
+
+func recentAffectedHost(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	data, err := persistance.GetRepoContainer().ThreatRepository.RecentAffected(ctx)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	hxxp.RespondJson(w, 200, "Success", data)
+}
+
+func threatOverview(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	total, recent, affectedClients, err := persistance.GetRepoContainer().ThreatRepository.Overview(ctx)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	hxxp.RespondJson(w, 200, "Success", map[string]int64{
+		"total":            total,
+		"recent":           recent,
+		"affected_clients": affectedClients,
+	})
+}
+
 func threatsList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

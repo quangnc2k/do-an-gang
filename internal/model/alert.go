@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type Alert struct {
 	ID         string                 `json:"id"`
@@ -20,4 +23,15 @@ type AlertConfig struct {
 	Confidence     float64       `json:"confidence,omitempty"`
 	Recipients     []string      `json:"recipient,omitempty"`
 	SuppressFor    time.Duration `json:"suppressFor,omitempty"`
+
+	mu        *sync.Mutex
+	LastAlert time.Time `json:"-"`
+}
+
+func (c *AlertConfig) Lock() {
+	c.mu.Lock()
+}
+
+func (c *AlertConfig) Unlock() {
+	c.mu.Unlock()
 }

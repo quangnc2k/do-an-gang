@@ -26,6 +26,9 @@ type Environment struct {
 	MigrateFilePath string `envconfig:"migrate_file_path"`
 
 	JWTSecret string `envconfig:"jwt_secret"`
+
+	MailUser     string `envconfig:"mail_user"`
+	MailPassword string `envconfig:"mail_password"`
 }
 
 func Init() {

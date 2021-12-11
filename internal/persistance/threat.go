@@ -17,5 +17,5 @@ type ThreatRepository interface {
 
 	RecentAffected(ctx context.Context) (host map[string]time.Time, err error)
 	RecentAttackByPhase(ctx context.Context) (host map[string]time.Time, err error)
-	Overview(ctx context.Context) (total, recent, numOfHost int64)
+	Overview(ctx context.Context) (total, recent, numOfHost int64, err error)
 }
