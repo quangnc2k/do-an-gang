@@ -5,7 +5,7 @@ import (
 	"github.com/quangnc2k/do-an-gang/internal/config"
 	"log"
 
-	"github.com/pkg/errors"
+	"errors"
 )
 
 var queue QueueStore

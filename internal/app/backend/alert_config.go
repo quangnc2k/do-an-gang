@@ -2,12 +2,13 @@ package backend
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/quangnc2k/do-an-gang/internal/model"
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
 	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 	"net/http"
+	"time"
 )
 
 func alertConfigList(w http.ResponseWriter, r *http.Request) {
@@ -45,11 +46,27 @@ func alertConfigCreateOne(w http.ResponseWriter, r *http.Request) {
 	var payload model.AlertConfig
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
 	defer r.Body.Close()
 
 	payload.ID = uuid.New().String()
 
-	err = persistance.GetRepoContainer().AlertConfigRepository.Create(ctx, payload)
+	if payload.SeverityString == "" || len(payload.Recipients) == 0 || payload.Name == "" {
+		hxxp.RespondJson(w, http.StatusBadRequest, "invalid input", nil)
+		return
+	}
+
+	payload.SuppressFor, err = time.ParseDuration(payload.SuppressForString)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	err = persistance.GetRepoContainer().AlertConfigRepository.Create(ctx, &payload)
 	if err != nil {
 		hxxp.RespondJson(w, 500, err.Error(), nil)
 		return
@@ -70,7 +87,22 @@ func alertConfigUpdateOne(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
 	defer r.Body.Close()
+
+	if payload.SeverityString == "" || len(payload.Recipients) == 0 || payload.Name == "" {
+		hxxp.RespondJson(w, http.StatusBadRequest, "invalid input", nil)
+		return
+	}
+
+	payload.SuppressFor, err = time.ParseDuration(payload.SuppressForString)
+	if err != nil {
+		hxxp.RespondJson(w, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
 
 	err = persistance.GetRepoContainer().AlertConfigRepository.UpdateOneByID(ctx, payload, id)
 	if err != nil {

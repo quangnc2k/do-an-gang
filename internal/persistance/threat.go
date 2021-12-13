@@ -15,7 +15,13 @@ type ThreatRepository interface {
 	HistogramAffected(ctx context.Context, width string, start, end time.Time) (model.LineChartData, error)
 	StoreThreatInBatch(ctx context.Context, threatChan []model.Threat) (err error)
 
-	RecentAffected(ctx context.Context) (host map[string]time.Time, err error)
-	RecentAttackByPhase(ctx context.Context) (host map[string]time.Time, err error)
+	RecentAffected(ctx context.Context) (hosts []struct {
+		Host string    `json:"host"`
+		T    time.Time `json:"t"`
+	}, err error)
+	RecentAttackByPhase(ctx context.Context) (phases []struct {
+		Phase string    `json:"phase"`
+		T     time.Time `json:"t"`
+	}, err error)
 	Overview(ctx context.Context) (total, recent, numOfHost int64, err error)
 }

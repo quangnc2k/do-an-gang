@@ -25,7 +25,10 @@ func NewThreatSQLRepo(ctx context.Context, conn *pgxpool.Pool) (ThreatRepository
 	return &ThreatRepositorySQL{connection: conn}, nil
 }
 
-func (r *ThreatRepositorySQL) RecentAffected(ctx context.Context) (hosts map[string]time.Time, err error) {
+func (r *ThreatRepositorySQL) RecentAffected(ctx context.Context) (hosts []struct {
+	Host string    `json:"host"`
+	T    time.Time `json:"t"`
+}, err error) {
 	query := `SELECT affected_host, seen_at FROM threats ORDER BY seen_at LIMIT 50`
 
 	rows, err := r.connection.Query(ctx, query)
@@ -44,13 +47,19 @@ func (r *ThreatRepositorySQL) RecentAffected(ctx context.Context) (hosts map[str
 			continue
 		}
 
-		hosts[host] = t
+		hosts = append(hosts, struct {
+			Host string    `json:"host"`
+			T    time.Time `json:"t"`
+		}{Host: host, T: t})
 	}
 
 	return
 }
 
-func (r *ThreatRepositorySQL) RecentAttackByPhase(ctx context.Context) (phases map[string]time.Time, err error) {
+func (r *ThreatRepositorySQL) RecentAttackByPhase(ctx context.Context) (phases []struct {
+	Phase string    `json:"phase"`
+	T     time.Time `json:"t"`
+}, err error) {
 	query := `SELECT phase, seen_at FROM threats ORDER BY seen_at LIMIT 50`
 
 	rows, err := r.connection.Query(ctx, query)
@@ -69,7 +78,10 @@ func (r *ThreatRepositorySQL) RecentAttackByPhase(ctx context.Context) (phases m
 			continue
 		}
 
-		phases[ph] = t
+		phases = append(phases, struct {
+			Phase string    `json:"phase"`
+			T     time.Time `json:"t"`
+		}{Phase: ph, T: t})
 	}
 
 	return

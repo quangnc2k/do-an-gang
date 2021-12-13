@@ -3,6 +3,7 @@ package persistance
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
@@ -45,10 +46,12 @@ func (r *AlertConfigRepositorySQL) GetAll(ctx context.Context) (configs []model.
 		configs = append(configs, config)
 	}
 
+	fmt.Println(configs)
+
 	return
 }
 
-func (r *AlertConfigRepositorySQL) Create(ctx context.Context, config model.AlertConfig) (err error) {
+func (r *AlertConfigRepositorySQL) Create(ctx context.Context, config *model.AlertConfig) (err error) {
 	query := `INSERT INTO alert_configs (id, name, created_at, severity, confidence, recipients, suppress_for)
 				VALUES($1, $2, $3, $4, $5, $6, $7)`
 
