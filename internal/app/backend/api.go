@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/jwtauth"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/quangnc2k/do-an-gang/internal/config"
 )
 
@@ -56,7 +56,7 @@ func ServeBackend(ctx context.Context, addr string) (err error) {
 				r.Get("/overview", threatOverview)
 				r.Get("/recent-affected", recentAffectedHost)
 				r.Get("/recent-phase", recentAttackPhase)
-				
+
 				r.Get("/stats-severity", threatStatsSeverity)
 				r.Get("/stats-phase", threatStatsPhase)
 				r.Get("/stats-affected", threatTopAffectedHost)
@@ -71,7 +71,7 @@ func ServeBackend(ctx context.Context, addr string) (err error) {
 			})
 
 			r.Route("/alert-configs", func(r chi.Router) {
-				r.Get("/", alertsList)
+				r.Get("/", alertConfigList)
 				r.Post("/", alertConfigCreateOne)
 				r.Get("/{id}", alertConfigReadOne)
 				r.Patch("/{id}", alertConfigUpdateOne)

@@ -2,7 +2,7 @@ package hxxp
 
 import (
 	"context"
-	"github.com/go-chi/jwtauth"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/lestrrat-go/jwx/jwt"
 	"net/http"
 )
