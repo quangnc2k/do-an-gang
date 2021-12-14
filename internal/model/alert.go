@@ -29,6 +29,10 @@ type AlertConfig struct {
 	LastAlert time.Time `json:"-"`
 }
 
+func (c *AlertConfig) SetLock() {
+	c.mu = new(sync.Mutex)
+}
+
 func (c *AlertConfig) Lock() {
 	c.mu.Lock()
 }

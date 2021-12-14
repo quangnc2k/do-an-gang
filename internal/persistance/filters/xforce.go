@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/quangnc2k/do-an-gang/internal/config"
 	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
+	"log"
 	"net/http"
 	"sync"
 )
@@ -54,7 +55,7 @@ func (e *XForceEngine) Check(ctx context.Context, resource string) (marked bool,
 		credit = float64(respData.Score)
 	}
 
-	fmt.Println("Checked with XForce:", resource, "got score:", respData.Score)
+	log.Println("Checked with XForce:", resource, "got score:", respData.Score)
 
 	return marked, credit, respData, nil
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/quangnc2k/do-an-gang/internal/config"
 	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -59,7 +60,7 @@ func (e *VTTEngine) Check(ctx context.Context, resource string) (marked bool, cr
 		return
 	}
 
-	fmt.Println("Checked with vtt:", url, "got result", respData)
+	log.Println("Checked with vtt:", url, "got result", respData)
 
 	if respData.Data.Attributes.LastAnalysisStats.Malicious+
 		respData.Data.Attributes.LastAnalysisStats.Suspicious > 0 {

@@ -3,7 +3,6 @@ package persistance
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quangnc2k/do-an-gang/internal/model"
@@ -43,10 +42,10 @@ func (r *AlertConfigRepositorySQL) GetAll(ctx context.Context) (configs []model.
 			config.Severity = 8
 		}
 
+		config.SetLock()
+
 		configs = append(configs, config)
 	}
-
-	fmt.Println(configs)
 
 	return
 }

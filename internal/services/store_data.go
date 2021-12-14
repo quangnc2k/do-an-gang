@@ -26,6 +26,14 @@ func StoreData(ctx context.Context, wg *sync.WaitGroup, threatChan chan model.Th
 
 				threatArr = []model.Threat{}
 			case threat := <-threatChan:
+				go func() {
+					err := alertStore.CheckAlert(ctx, threat)
+					if err != nil {
+						log.Println("alert threat failed:", err)
+					}
+
+				}()
+
 				threatArr = append(threatArr, threat)
 			}
 

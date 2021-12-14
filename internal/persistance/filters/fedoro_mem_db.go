@@ -3,7 +3,6 @@ package filters
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"github.com/quangnc2k/do-an-gang/pkg/hxxp"
 	"log"
 	"net"
@@ -78,7 +77,7 @@ func (e *FedoroEngine) Check(ctx context.Context, resource string) (marked bool,
 		extra["description"] = "Detected by Fedoro block list"
 	}
 
-	fmt.Println("Checked with Fedoro:", resource, "found:", marked)
+	log.Println("Checked with Fedoro:", resource, "found:", marked)
 
 	extraResource = extra
 	return

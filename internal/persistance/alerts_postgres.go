@@ -57,8 +57,8 @@ func (r *AlertRepositorySQL) Create(ctx context.Context, alert model.Alert) (err
 	if err != nil {
 		return
 	}
-	query := `INSERT INTO alerts (id, created_at, details) VALUES ($1, $2, $3)`
-	_, err = r.connection.Exec(ctx, query, alert.ID, alert.CreatedAt, d)
+	query := `INSERT INTO alerts (id, created_at, details, resolved) VALUES ($1, $2, $3, $4)`
+	_, err = r.connection.Exec(ctx, query, alert.ID, alert.CreatedAt, d, alert.Resolved)
 	return
 }
 

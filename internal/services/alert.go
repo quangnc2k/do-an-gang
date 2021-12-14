@@ -2,6 +2,9 @@ package services
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/google/uuid"
 	"github.com/quangnc2k/do-an-gang/internal/config"
 	"github.com/quangnc2k/do-an-gang/internal/model"
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
@@ -15,7 +18,7 @@ type AlertStore struct {
 	alertConfigStore []model.AlertConfig
 }
 
-func (s *AlertStore) InitAlertStore(ctx context.Context) (err error) {
+func InitAlertStore(ctx context.Context) (err error) {
 	configs, err := persistance.GetRepoContainer().AlertConfigRepository.GetAll(ctx)
 	if err != nil {
 		return
@@ -26,24 +29,54 @@ func (s *AlertStore) InitAlertStore(ctx context.Context) (err error) {
 }
 
 func (s *AlertStore) CheckAlert(ctx context.Context, threat model.Threat) (err error) {
-	for i, alertConfig := range alertStore.alertConfigStore {
-		if threat.Severity >= float64(alertConfig.Severity) &&
-			alertConfig.LastAlert.Add(alertConfig.SuppressFor).Before(time.Now()) {
-			err = s.SendAlertEmail(ctx, &alertConfig)
+	for i, _ := range alertStore.alertConfigStore {
+		alertStore.alertConfigStore[i].Lock()
+		if threat.Severity >= float64(alertStore.alertConfigStore[i].Severity) &&
+			alertStore.alertConfigStore[i].LastAlert.Add(alertStore.alertConfigStore[i].SuppressFor).Before(time.Now()) {
+			var str = ""
+			m := make(map[string]interface{})
+
+			alertStore.alertConfigStore[i].LastAlert = time.Now()
+
+			data, err := json.Marshal(threat)
 			if err != nil {
-				return
+				alertStore.alertConfigStore[i].Unlock()
+				return err
 			}
 
-			alertStore.alertConfigStore[i].Lock()
-			alertStore.alertConfigStore[i].LastAlert = time.Now()
-			alertStore.alertConfigStore[i].Unlock()
+			err = json.Unmarshal(data, &m)
+			if err != nil {
+				alertStore.alertConfigStore[i].Unlock()
+				return err
+			}
+
+			err = persistance.GetRepoContainer().AlertRepository.Create(ctx,
+				model.Alert{
+					ID:         uuid.NewString(),
+					CreatedAt:  time.Now(),
+					Details:    m,
+					Resolved:   false,
+					ResolvedAt: &time.Time{},
+					ResolvedBy: &str,
+				})
+			if err != nil {
+				alertStore.alertConfigStore[i].Unlock()
+				return err
+			}
+
+			err = s.SendAlertEmail(ctx, &alertStore.alertConfigStore[i], threat)
+			if err != nil {
+				alertStore.alertConfigStore[i].Unlock()
+				return err
+			}
 		}
+		alertStore.alertConfigStore[i].Unlock()
 	}
 
 	return err
 }
 
-func (s *AlertStore) SendAlertEmail(ctx context.Context, c *model.AlertConfig) (err error) {
+func (s *AlertStore) SendAlertEmail(ctx context.Context, c *model.AlertConfig, threat model.Threat) (err error) {
 	from := config.Env.MailUser
 	pass := config.Env.MailPassword
 	to := c.Recipients
@@ -52,7 +85,7 @@ func (s *AlertStore) SendAlertEmail(ctx context.Context, c *model.AlertConfig) (
 	m.SetHeader("From", from)
 	m.SetHeader("To", to...)
 	m.SetHeader("Subject", "Alert", c.Name, "was triggered")
-	m.SetBody("text/html", "Needs something here!")
+	m.SetBody("text/html", fmt.Sprintf("%+v", threat))
 
 	d := gomail.NewDialer("smtp.gmail.com", 587, from, pass)
 
