@@ -35,6 +35,8 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 	noticeLog.SetExtraResource()
 	if noticeLog.ExtraResource == nil {
 		return
+	} else {
+		marked = true
 	}
 
 	src := noticeLog.Source
@@ -49,7 +51,7 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 
 	fmt.Println("asdasdasdasdasdasdds", src)
 
-	marked, credit, xtra, err := persistance.IPEngine.Check(ctx, src)
+	marked2, credit, xtra, err := persistance.IPEngine.Check(ctx, src)
 	if err != nil {
 		log.Println(ErrNoticePrefix, err)
 		return
@@ -66,7 +68,7 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 		Phase:        something.ExtractFromJsonMap(m, "phase").(string),
 	}
 
-	if marked {
+	if marked2 {
 		threat.Severity += credit / 2
 		threat.Confidence = 1
 	}

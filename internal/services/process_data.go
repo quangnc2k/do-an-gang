@@ -24,8 +24,10 @@ func ProcessData(ctx context.Context, consumers *sync.WaitGroup,
 					}
 
 				case "notice":
-					_, threat := ProcessNotice(ctx, payload.Data)
-					outputChan <- threat
+					marked, threat := ProcessNotice(ctx, payload.Data)
+					if marked {
+						outputChan <- threat
+					}
 
 				default:
 					marked, threat := ProcessGeneral(ctx, payload.Data)
