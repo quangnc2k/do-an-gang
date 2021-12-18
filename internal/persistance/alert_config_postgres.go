@@ -35,11 +35,11 @@ func (r *AlertConfigRepositorySQL) GetAll(ctx context.Context) (configs []model.
 		if config.SeverityString == "low" {
 			config.Severity = 0
 		} else if config.SeverityString == "medium" {
-			config.Severity = 2
+			config.Severity = 4
 		} else if config.SeverityString == "high" {
-			config.Severity = 5
+			config.Severity = 7
 		} else if config.SeverityString == "critical" {
-			config.Severity = 8
+			config.Severity = 9
 		}
 
 		config.SetLock()

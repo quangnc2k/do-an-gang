@@ -54,12 +54,11 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 		AffectedHost: connLog.ID.OriginalHost,
 		AttackerHost: connLog.ID.ResponseHost,
 		ConnID:       connLog.UID,
-		Phase:        model.CnC,
+		Phase:        model.LM,
 	}
 
 	if credit > 0 {
 		threat.Severity += credit
-		threat.Confidence = 0.8
 	}
 
 	threat.Metadata = m

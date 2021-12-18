@@ -52,13 +52,13 @@ func (r *AlertRepositorySQL) FindAll(ctx context.Context, showAll bool) (alerts 
 	return
 }
 
-func (r *AlertRepositorySQL) Create(ctx context.Context, alert model.Alert) (err error) {
+func (r *AlertRepositorySQL) Create(ctx context.Context, alert model.Alert, configId string) (err error) {
 	d, err := json.Marshal(alert.Details)
 	if err != nil {
 		return
 	}
-	query := `INSERT INTO alerts (id, created_at, details, resolved) VALUES ($1, $2, $3, $4)`
-	_, err = r.connection.Exec(ctx, query, alert.ID, alert.CreatedAt, d, alert.Resolved)
+	query := `INSERT INTO alerts (id, created_at, details, resolved, alert_config_id) VALUES ($1, $2, $3, $4, $5)`
+	_, err = r.connection.Exec(ctx, query, alert.ID, alert.CreatedAt, d, alert.Resolved, configId)
 	return
 }
 

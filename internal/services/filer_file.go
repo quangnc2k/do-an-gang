@@ -55,7 +55,6 @@ func ProcessFile(ctx context.Context, data string) (marked bool, threat model.Th
 
 	if credit > 0 {
 		threat.Severity += credit * 10
-		threat.Confidence = 0.9
 	}
 	threat.ConnID = something.ExtractFromJsonMap(m, "fuid").(string)
 	threat.Metadata = m

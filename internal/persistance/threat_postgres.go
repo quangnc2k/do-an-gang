@@ -190,7 +190,7 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 	}
 
 	psql := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
-	queryBuilder := psql.Select("id", "created_at", "seen_at", "affected_host", "attacker_host", "confidence", "severity", "phase", "metadata")
+	queryBuilder := psql.Select("id", "created_at", "seen_at", "affected_host", "attacker_host", "severity", "phase", "metadata")
 	queryBuilder = queryBuilder.From("threats")
 
 	where := sq.And{
@@ -235,10 +235,9 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 		//err = rows.Scan(&row[0], &row[1], &row[2], &row[3], &row[4], &row[5], &row[6])
 		var createdAt, seenAt time.Time
 		var id, affectedHost, attackHost, severity, phase string
-		var confidence float64
 		var metadata map[string]interface{}
 
-		err = rows.Scan(&id, &createdAt, &seenAt, &affectedHost, &attackHost, &confidence, &severity, &phase, &metadata)
+		err = rows.Scan(&id, &createdAt, &seenAt, &affectedHost, &attackHost, &severity, &phase, &metadata)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -250,7 +249,6 @@ func (r *ThreatRepositorySQL) Paginate(ctx context.Context, page, perPage int, o
 			SeenAt:         seenAt,
 			AffectedHost:   affectedHost,
 			AttackerHost:   attackHost,
-			Confidence:     confidence,
 			SeverityString: severity,
 			Phase:          phase,
 			Metadata:       metadata,
@@ -398,17 +396,17 @@ func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []
 
 	for _, threat := range threats {
 		var severity string
-		if threat.Severity > 8 {
+		if threat.Severity >= 9 {
 			severity = "critical"
-		} else if threat.Severity > 5 {
+		} else if threat.Severity >= 7 {
 			severity = "high"
-		} else if threat.Severity > 2 {
+		} else if threat.Severity >= 4 {
 			severity = "medium"
 		} else {
 			severity = "low"
 		}
-		query := "INSERT INTO threats (id, created_at, seen_at, affected_host, attacker_host, conn_id, severity, confidence, phase, metadata)" +
-			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
+		query := "INSERT INTO threats (id, created_at, seen_at, affected_host, attacker_host, conn_id, severity, phase, metadata)" +
+			"VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 		batch.Queue(query,
 			uuid.New().String(),
 			time.Now(),
@@ -417,7 +415,6 @@ func (r *ThreatRepositorySQL) StoreThreatInBatch(ctx context.Context, threats []
 			threat.AttackerHost,
 			threat.ConnID,
 			severity,
-			threat.Confidence,
 			threat.Phase,
 			threat.Metadata,
 		)

@@ -5,6 +5,7 @@ import (
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
 	"log"
 	"sync"
+	"time"
 )
 
 type RawPayload struct {
@@ -34,6 +35,9 @@ func PopDataFromQueue(ctx context.Context, producers *sync.WaitGroup, outputChan
 							return
 						}
 						continue
+					}
+					if len(outputChan) > 500 {
+						time.Sleep(5 * time.Second)
 					}
 					outputChan <- RawPayload{Channel: ch, Data: data}
 				}

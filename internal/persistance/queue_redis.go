@@ -11,7 +11,7 @@ type RedisQueue struct {
 }
 
 func (q *RedisQueue) Pop(ctx context.Context) (channel string, data string, err error) {
-	val, err := q.client.BLPop(30*time.Second, "file", "notice", "conn").Result()
+	val, err := q.client.BLPop(30*time.Second, "notice", "conn", "file").Result()
 	if err != nil {
 		if err.Error() == "redis: nil" {
 			err = ErrOutOfItem

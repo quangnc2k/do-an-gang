@@ -29,8 +29,8 @@ type NoticeLog struct {
 	SuppressFor       string      `json:"suppress_for,omitempty"`
 	RemoteLocation    interface{} `json:"remote_location,omitempty"`
 	Dropped           bool        `json:"dropped,omitempty"`
-	OriginalMAC       string      `json:"orig_mac"`
-	OriginalHostName  string      `json:"orig_host_name"`
+	SuspectedHosts    []string    `json:"suspected_hosts"`
+	SuspectedAddr     []string    `json:"suspected_addr"`
 
 	ExtraResource *NoticeType            `json:"-"`
 	Metadata      map[string]interface{} `json:"-"`
@@ -55,7 +55,7 @@ func (log *NoticeLog) SetMetadata() error {
 
 func (log *NoticeLog) SetExtraResource() {
 	for _, v := range noticeNoteMap {
-		if strings.HasPrefix(log.Note, v.TypeHint) && (strings.Contains(log.Sub, v.Sub) || log.Sub == "") {
+		if strings.HasPrefix(log.Note, v.TypeHint) {
 			log.ExtraResource = &v
 			return
 		}

@@ -50,15 +50,14 @@ func (s *AlertStore) CheckAlert(ctx context.Context, threat model.Threat) (err e
 				return err
 			}
 
-			err = persistance.GetRepoContainer().AlertRepository.Create(ctx,
-				model.Alert{
-					ID:         uuid.NewString(),
-					CreatedAt:  time.Now(),
-					Details:    m,
-					Resolved:   false,
-					ResolvedAt: &time.Time{},
-					ResolvedBy: &str,
-				})
+			err = persistance.GetRepoContainer().AlertRepository.Create(ctx, model.Alert{
+				ID:         uuid.NewString(),
+				CreatedAt:  time.Now(),
+				Details:    m,
+				Resolved:   false,
+				ResolvedAt: &time.Time{},
+				ResolvedBy: &str,
+			}, alertStore.alertConfigStore[i].ID)
 			if err != nil {
 				alertStore.alertConfigStore[i].Unlock()
 				return err

@@ -18,11 +18,11 @@ type XForceEngine struct {
 }
 
 type XForceResponse struct {
-	IP                   string            `json:"ip"`
-	Cats                 map[string]int    `json:"cats"`
-	Geo                  map[string]string `json:"geo"`
-	CategoryDescriptions map[string]string `json:"categoryDescriptions"`
-	Score                float32           `json:"score"`
+	IP                   string            `json:"ip,omitempty"`
+	Cats                 map[string]int    `json:"cats,omitempty"`
+	Geo                  map[string]string `json:"geo,omitempty"`
+	CategoryDescriptions map[string]string `json:"categoryDescriptions,omitempty"`
+	Score                float32           `json:"score,omitempty"`
 }
 
 func (e *XForceEngine) Check(ctx context.Context, resource string) (marked bool, credit float64, extraResource interface{}, err error) {
@@ -50,9 +50,11 @@ func (e *XForceEngine) Check(ctx context.Context, resource string) (marked bool,
 		return
 	}
 
-	if respData.Score > 5 {
+	if respData.Score > 1 {
 		marked = true
 		credit = float64(respData.Score)
+	} else {
+		respData = XForceResponse{}
 	}
 
 	log.Println("Checked with XForce:", resource, "got score:", respData.Score)

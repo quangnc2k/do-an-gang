@@ -3,11 +3,12 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/quangnc2k/do-an-gang/internal/model"
 	"github.com/quangnc2k/do-an-gang/internal/persistance"
 	"github.com/quangnc2k/do-an-gang/pkg/something"
 	"log"
+	"math"
+	"net"
 	"strings"
 )
 
@@ -39,19 +40,7 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 		marked = true
 	}
 
-	src := noticeLog.Source
-	if src == "" && noticeLog.ID != nil {
-		src = noticeLog.ID.OriginalHost
-	}
-
-	dest := noticeLog.Destination
-	if dest == "" && noticeLog.ID != nil {
-		dest = noticeLog.ID.ResponseHost
-	}
-
-	fmt.Println("asdasdasdasdasdasdds", src)
-
-	marked2, credit, xtra, err := persistance.IPEngine.Check(ctx, src)
+	marked2, credit, xtra, aff, sus, err := doubleCheckNoticeLog(ctx, noticeLog)
 	if err != nil {
 		log.Println(ErrNoticePrefix, err)
 		return
@@ -61,18 +50,81 @@ func ProcessNotice(ctx context.Context, data string) (marked bool, threat model.
 
 	threat = model.Threat{
 		SeenAt:       something.ToTime(noticeLog.TS),
-		AffectedHost: dest,
-		AttackerHost: src,
-		Confidence:   something.ExtractFromJsonMap(m, "confidence").(float64),
-		Severity:     something.ExtractFromJsonMap(m, "severity").(float64) / 2,
+		AffectedHost: aff,
+		AttackerHost: sus,
+		Severity:     something.ExtractFromJsonMap(m, "severity").(float64),
 		Phase:        something.ExtractFromJsonMap(m, "phase").(string),
 	}
 
 	if marked2 {
-		threat.Severity += credit / 2
-		threat.Confidence = 1
+		threat.Severity += math.Floor(credit / 3)
 	}
 
 	threat.Metadata = m
+	return
+}
+
+func doubleCheckNoticeLog(ctx context.Context, l model.NoticeLog) (marked bool, credit float64, xtra interface{},
+	aff, sus string, err error) {
+	if l.ExtraResource.IsHostVictim {
+		aff = l.Source
+		// Check if notice has destination logged and whether it is dirty
+		if l.Destination != "" {
+			marked, credit, xtra, err = persistance.IPEngine.Check(ctx, l.Destination)
+			if err != nil {
+				log.Println(ErrNoticePrefix, err)
+				return
+			}
+
+			if marked {
+				return marked, credit, xtra, l.Source, l.Destination, nil
+			}
+		}
+
+		// Check dirt in list of suspected addresses
+		for _, addr := range l.SuspectedAddr {
+			marked, credit, xtra, err = persistance.IPEngine.Check(ctx, addr)
+			if err != nil {
+				log.Println(ErrNoticePrefix, err)
+				return
+			}
+
+			if marked {
+				return marked, credit, xtra, l.Source, addr, nil
+			}
+		}
+
+		// Check dirt in list of suspected hostname
+		for _, host := range l.SuspectedHosts {
+			addrs, err1 := net.LookupIP(host)
+			if err1 != nil {
+				log.Println(ErrNoticePrefix, err1)
+				return
+			}
+
+			for _, addr := range addrs {
+				marked, credit, xtra, err = persistance.IPEngine.Check(ctx, addr.String())
+				if err != nil {
+					log.Println(ErrNoticePrefix, err)
+					return
+				}
+
+				if marked {
+					return marked, credit, xtra, l.Source, addr.String(), nil
+				}
+			}
+		}
+	} else {
+		sus = l.Source
+		marked, credit, xtra, err = persistance.IPEngine.Check(ctx, l.Source)
+		if err != nil {
+			log.Println(ErrNoticePrefix, err)
+			return
+		}
+
+		if marked {
+			return marked, credit, xtra, "", l.Source, nil
+		}
+	}
 	return
 }

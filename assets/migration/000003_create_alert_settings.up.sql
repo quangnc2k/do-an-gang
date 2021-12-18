@@ -8,3 +8,5 @@ CREATE TABLE alert_configs
     recipients    VARCHAR(320)[] NOT NULL,
     suppress_for INTERVAL     NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS alert_configs_unique_id ON alert_configs (id);
