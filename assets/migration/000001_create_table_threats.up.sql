@@ -24,3 +24,29 @@ CREATE INDEX IF NOT EXISTS threats_affected_host_idx ON threats (affected_host);
 CREATE INDEX IF NOT EXISTS threats_suspect_idx ON threats (attacker_host);
 CREATE INDEX IF NOT EXISTS threats_created_at_idx ON threats (created_at);
 CREATE INDEX IF NOT EXISTS threats_resource_idx ON threats (phase);
+
+CREATE OR REPLACE FUNCTION onChanges() RETURNS TRIGGER AS $$
+
+DECLARE
+data JSON;
+    notification JSON;
+
+BEGIN
+    IF (TG_OP = 'DELETE') THEN
+        data = row_to_json(OLD);
+ELSE
+        data = row_to_json(NEW);
+END IF;
+
+    notification = json_build_object(
+        'table', TG_ARGV[0],
+        'action', TG_OP,
+        'data', data
+    );
+
+    PERFORM pg_notify('changes',notification::text);
+
+RETURN NULL;
+END;
+
+$$ LANGUAGE plpgsql;

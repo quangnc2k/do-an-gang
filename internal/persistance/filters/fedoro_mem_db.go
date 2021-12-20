@@ -11,12 +11,12 @@ import (
 	"time"
 )
 
-type FedoroEngine struct {
+type FeodoTrackerEngine struct {
 	Blacklist map[string]bool
 	mu        *sync.RWMutex
 }
 
-func (e *FedoroEngine) StoreIntoMem() (err error) {
+func (e *FeodoTrackerEngine) StoreIntoMem() (err error) {
 	client := hxxp.NewHTTPClient()
 
 	url := "https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt"
@@ -54,7 +54,7 @@ func (e *FedoroEngine) StoreIntoMem() (err error) {
 	return nil
 }
 
-func (e *FedoroEngine) ClearFromMem() (err error) {
+func (e *FeodoTrackerEngine) ClearFromMem() (err error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	for k, v := range e.Blacklist {
@@ -65,7 +65,7 @@ func (e *FedoroEngine) ClearFromMem() (err error) {
 	return nil
 }
 
-func (e *FedoroEngine) Check(ctx context.Context, resource string) (marked bool, credit float64, extraResource interface{}, err error) {
+func (e *FeodoTrackerEngine) Check(ctx context.Context, resource string) (marked bool, credit float64, extraResource interface{}, err error) {
 	extra := make(map[string]interface{})
 
 	e.mu.RLock()
@@ -74,19 +74,19 @@ func (e *FedoroEngine) Check(ctx context.Context, resource string) (marked bool,
 	if e.Blacklist[resource] {
 		marked = true
 		credit = 5
-		extra["description"] = "Detected by Fedoro block list"
+		extra["description"] = "Detected by Feodo Tracker block list"
 	}
 
-	log.Println("Checked with Fedoro:", resource, "found:", marked)
+	log.Println("Checked with Feodo:", resource, "found:", marked)
 
 	extraResource = extra
 	return
 }
 
-func InitFedoroEngine(ctx context.Context) *FedoroEngine {
+func InitFedoroEngine(ctx context.Context) *FeodoTrackerEngine {
 	mu := sync.RWMutex{}
 	var m = make(map[string]bool)
-	blacklistEngine := FedoroEngine{
+	blacklistEngine := FeodoTrackerEngine{
 		Blacklist: m,
 		mu:        &mu,
 	}

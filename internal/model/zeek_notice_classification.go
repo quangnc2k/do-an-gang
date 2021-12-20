@@ -6,6 +6,7 @@ const (
 	DA  = "Deepen Access"
 	LM  = "Lateral Movement"
 	LLR = "Look, Learn, Remain"
+	UK  = "Undefined"
 )
 
 type NoticeType struct {
@@ -21,6 +22,13 @@ type NoticeType struct {
 }
 
 var noticeNoteMap = map[string]NoticeType{
+	"Heartbleed": {
+		Origin:   "SSL Heartbleed Detection",
+		TypeHint: "Heartbleed::",
+		Severity: 7.5,
+		Phase:    GA,
+	},
+
 	"Beacon Detection": {
 		Origin:   "Botnet Beacon Detection",
 		TypeHint: "BOTNET::",

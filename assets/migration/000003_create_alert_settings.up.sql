@@ -10,3 +10,7 @@ CREATE TABLE alert_configs
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS alert_configs_unique_id ON alert_configs (id);
+
+CREATE TRIGGER alert_configs_changes
+    AFTER INSERT OR UPDATE OR DELETE ON alert_configs
+    FOR EACH ROW EXECUTE PROCEDURE onChanges('alert_configs');

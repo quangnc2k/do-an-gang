@@ -54,7 +54,7 @@ func ProcessGeneral(ctx context.Context, data string) (marked bool, threat model
 		AffectedHost: connLog.ID.OriginalHost,
 		AttackerHost: connLog.ID.ResponseHost,
 		ConnID:       connLog.UID,
-		Phase:        model.LM,
+		Phase:        model.UK,
 	}
 
 	if credit > 0 {
