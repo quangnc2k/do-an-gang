@@ -62,7 +62,7 @@ var noticeNoteMap = map[string]NoticeType{
 		Origin:   "Scan Detection",
 		TypeHint: "Scan::",
 		Severity: 4.2,
-		Phase:    EF,
+		Phase:    LM,
 	},
 
 	"BZAR Credential Access": {

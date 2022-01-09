@@ -44,7 +44,7 @@ func ProcessFile(ctx context.Context, data string) (marked bool, threat model.Th
 		SeenAt:       something.ToTime(fileLog.TS),
 		AffectedHost: receiver,
 		AttackerHost: transmitter,
-		Phase:        model.LM,
+		Phase:        model.UK,
 	}
 
 	if !marked {
